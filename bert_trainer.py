@@ -56,6 +56,8 @@ class BERTTrainer():
     def _train_and_test_features_from_df(self):
         df = self._get_filtered_data()
         train, test = train_test_split(df, test_size=0.2)
+        train = train.sample(5000)
+        test = test.sample(5000)
         print('Getting features for training and testing datasets')
 
         DATA_COLUMN = 'abstract'
@@ -224,6 +226,7 @@ class BERTTrainer():
         self.estimator = tf.estimator.Estimator(
                 model_fn=model_fn,
                 config=run_config,
+                warm_start_from=self.output_dir,
                 params={"batch_size": self.batch_size})
 
     # Create an input function for training. drop_remainder = True for using TPUs.
