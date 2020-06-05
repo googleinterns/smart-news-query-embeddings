@@ -47,8 +47,6 @@ class BERTTrainer():
 
     def _train_and_test_features_from_df(self):
         train, test = train_test_split(self.data, test_size=0.2)
-        train = train.sample(5000)
-        test = test.sample(5000)
         print('Getting features for training and testing datasets')
 
         DATA_COLUMN = 'abstract'
@@ -172,7 +170,7 @@ class BERTTrainer():
                             "eval_accuracy": accuracy,
                             }
 
-                    eval_metrics = metric_fn(label_ids, predicted_labels)
+                eval_metrics = metric_fn(label_ids, predicted_labels)
 
                 if mode == tf.estimator.ModeKeys.TRAIN:
                     return tf.estimator.EstimatorSpec(mode=mode,

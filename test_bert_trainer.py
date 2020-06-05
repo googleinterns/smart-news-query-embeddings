@@ -2,6 +2,7 @@
 Example of how to use the BERTTrainer class.
 """
 
+import pandas as pd
 from bert_trainer import BERTTrainer
 
 def get_filtered_nyt_data(data_path):
@@ -20,7 +21,7 @@ if __name__ == '__main__':
     # Read in data. No need to separate training and validation,
     # BERTTrainer class takes care of that.
     nyt_data = get_filtered_nyt_data('nyt_data_from_2015.pkl')
-    trainer = BERTTrainer(nyt_data)
+    trainer = BERTTrainer(nyt_data, output_dir="bert_full_nyt_data_output")
     trainer.train_model()
     eval_accuracy_info = trainer.test_model()
     print(eval_accuracy_info)
