@@ -21,13 +21,15 @@ class BERTTrainer():
 
     # These hyperparameters are copied from this colab notebook
     # (https://colab.sandbox.google.com/github/tensorflow/tpu/blob/master/tools/colab/bert_finetuning_with_cloud_tpus.ipynb)
-    def __init__(self, data_path, batch_size=32, max_seq_length=128,
+    def __init__(self, data, batch_size=32, max_seq_length=128,
             learning_rate=2e-5, num_train_epochs=3,
             warmup_proportion=0.1, save_checkpoints_every=500,
             save_summary_every=100,
+            checkpoint_dir=None,
+            is_training=True,
             bert_model_hub="https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1",
             output_dir="bert_output"):
-        self.data_path = data_path
+        self.data = data
         self.batch_size = batch_size
         self.max_seq_length = max_seq_length
         self.learning_rate = learning_rate
@@ -37,32 +39,21 @@ class BERTTrainer():
         self.save_summary_every = save_summary_every
         self.bert_model_hub = bert_model_hub
         self.output_dir = output_dir
+        self.checkpoint_dir = checkpoint_dir
+        self.is_training = is_training
+        print('Saving models to {}'.format(output_dir))
         self._train_and_test_features_from_df()
         self._create_estimator()
 
-    def _get_filtered_data(self):
-        print('Reading data...')
-        df = pd.read_pickle(self.data_path)
-        sections = df[['section', 'desk']].drop_duplicates()
-        category_counts = sections.groupby('section').count().sort_values('desk', ascending=False)
-        big_category_df = category_counts[category_counts['desk'] >= 20]
-
-        big_categories = list(big_category_df.index)
-
-        filtered = df[df['section'].isin(big_categories)]
-        return filtered
-
-
     def _train_and_test_features_from_df(self):
-        df = self._get_filtered_data()
-        train, test = train_test_split(df, test_size=0.2)
+        train, test = train_test_split(self.data, test_size=0.2)
         train = train.sample(5000)
         test = test.sample(5000)
         print('Getting features for training and testing datasets')
 
         DATA_COLUMN = 'abstract'
         LABEL_COLUMN = 'section'
-        self.label_list = list(df['section'].unique())
+        self.label_list = list(self.data['section'].unique())
 
         train_input_examples = train.apply(lambda x: bert.run_classifier.InputExample(
             guid=None, # Globally unique ID for bookkeeping, unused in this example
@@ -90,10 +81,11 @@ class BERTTrainer():
         self.tokenizer = _create_tokenizer_from_hub_module()
 
         # Convert our train and test features to InputFeatures that BERT understands.
-        self.train_features = bert.run_classifier.convert_examples_to_features(
-            train_input_examples, self.label_list, self.max_seq_length, self.tokenizer)
-        self.test_features = bert.run_classifier.convert_examples_to_features(
-            test_input_examples, self.label_list, self.max_seq_length, self.tokenizer)
+        if self.is_training:
+            self.train_features = bert.run_classifier.convert_examples_to_features(
+                train_input_examples, self.label_list, self.max_seq_length, self.tokenizer)
+            self.test_features = bert.run_classifier.convert_examples_to_features(
+                test_input_examples, self.label_list, self.max_seq_length, self.tokenizer)
 
     def _create_model(self, is_predicting, input_ids, input_mask, segment_ids, labels,
             num_labels):
@@ -226,7 +218,7 @@ class BERTTrainer():
         self.estimator = tf.estimator.Estimator(
                 model_fn=model_fn,
                 config=run_config,
-                warm_start_from=self.output_dir,
+                warm_start_from=self.checkpoint_dir,
                 params={"batch_size": self.batch_size})
 
     # Create an input function for training. drop_remainder = True for using TPUs.
@@ -249,7 +241,7 @@ class BERTTrainer():
                 is_training=False,
                 drop_remainder=False)
 
-        self.estimator.evaluate(input_fn=test_input_fn, steps=None)
+        return self.estimator.evaluate(input_fn=test_input_fn, steps=None)
 
     def predict(self, inputs):
         input_examples = [run_classifier.InputExample(
