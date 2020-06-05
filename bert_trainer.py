@@ -10,7 +10,7 @@ import bert
 from bert import run_classifier
 
 """
-Wrapper class to set up BERT model. Takes in path to a pickle object
+Wrapper class to set up BERT model. Takes in Pandas DataFrame
 and is responsible for training, evaluating, and predicting.
 
 Much of this code is adapted from the following notebook:
