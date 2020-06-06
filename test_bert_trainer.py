@@ -23,7 +23,7 @@ if __name__ == '__main__':
     # BERTTrainer class takes care of that.
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch-size', '-b', default=32, type=int)
-    parser.add_argument('--learning_rate', '-l', default=2e-5, type=float)
+    parser.add_argument('--learning-rate', '-l', default=2e-5, type=float)
     parser.add_argument('--max-seq-length', default=128, type=int)
     parser.add_argument('--warmup-proportion', default=0.1, type=float)
     parser.add_argument('--num-train-epochs', '-n', default=3, type=int)
