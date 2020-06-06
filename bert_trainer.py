@@ -44,7 +44,7 @@ class BERTTrainer():
         self._create_estimator()
 
     def _train_and_test_features_from_df(self):
-        train, test = train_test_split(self.data, test_size=0.2)
+        train, test = train_test_split(self.data, test_size=0.2, random_state=42)
         print('Getting features for training and testing datasets')
 
         DATA_COLUMN = 'abstract'
