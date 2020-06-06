@@ -41,7 +41,7 @@ if __name__ == '__main__':
         warmup_proportion=args.warmup_proportion,
         num_train_epochs=args.num_train_epochs,
         save_checkpoints_every=args.save_checkpoints_every,
-        save_summary_ever=args.save_summary_every,
+        save_summary_every=args.save_summary_every,
         output_dir=args.output_dir,
         is_training=args.training,
     )
