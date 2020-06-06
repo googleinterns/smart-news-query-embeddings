@@ -25,7 +25,6 @@ class BERTTrainer():
             learning_rate=2e-5, num_train_epochs=3,
             warmup_proportion=0.1, save_checkpoints_every=500,
             save_summary_every=100,
-            checkpoint_dir=None,
             is_training=True,
             bert_model_hub="https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1",
             output_dir="bert_output"):
@@ -39,7 +38,6 @@ class BERTTrainer():
         self.save_summary_every = save_summary_every
         self.bert_model_hub = bert_model_hub
         self.output_dir = output_dir
-        self.checkpoint_dir = checkpoint_dir
         self.is_training = is_training
         print('Saving models to {}'.format(output_dir))
         self._train_and_test_features_from_df()
@@ -216,7 +214,7 @@ class BERTTrainer():
         self.estimator = tf.estimator.Estimator(
                 model_fn=model_fn,
                 config=run_config,
-                warm_start_from=self.checkpoint_dir,
+                warm_start_from=self.output_dir,
                 params={"batch_size": self.batch_size})
 
     # Create an input function for training. drop_remainder = True for using TPUs.
