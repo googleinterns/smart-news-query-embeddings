@@ -23,7 +23,7 @@ class BERTTrainer():
     # These hyperparameters are copied from this colab notebook
     # (https://colab.sandbox.google.com/github/tensorflow/tpu/blob/master/tools/colab/bert_finetuning_with_cloud_tpus.ipynb)
     def __init__(self, data, batch_size=32, max_seq_length=128,
-            learning_rate=2e-5, num_train_epochs=3,
+            learning_rate=2e-5, num_train_epochs=3, dense_size=256,
             warmup_proportion=0.1, save_checkpoints_every=500,
             save_summary_every=100,
             is_training=True,
@@ -34,6 +34,7 @@ class BERTTrainer():
         self.max_seq_length = max_seq_length
         self.learning_rate = learning_rate
         self.num_train_epochs = num_train_epochs
+        self.dense_size = dense_size
         self.warmup_proportion = warmup_proportion
         self.save_checkpoints_every = save_checkpoints_every
         self.save_summary_every = save_summary_every
@@ -112,12 +113,17 @@ class BERTTrainer():
 
         hidden_size = output_layer.shape[-1].value
 
-        # Dense layer that outputs classes after BERT layer.
-        output_weights = tf.get_variable(
-                "output_weights", [num_labels, hidden_size],
+        dense_weights = tf.get_variable(
+                "dense_weights", [self.dense_size, hidden_size],
                 initializer=tf.truncated_normal_initializer(stddev=0.02))
 
-        print(output_layer.shape, output_weights.shape)
+        dense_bias = tf.get_variable(
+                "dense_bias", [self.dense_size], initializer=tf.zeros_initializer())
+
+        # Dense layer that outputs classes after BERT layer.
+        output_weights = tf.get_variable(
+                "output_weights", [num_labels, self.dense_size],
+                initializer=tf.truncated_normal_initializer(stddev=0.02))
 
         output_bias = tf.get_variable(
                 "output_bias", [num_labels], initializer=tf.zeros_initializer())
@@ -127,7 +133,12 @@ class BERTTrainer():
             # Dropout helps prevent overfitting
             output_layer = tf.nn.dropout(output_layer, keep_prob=0.9)
 
-            logits = tf.matmul(output_layer, output_weights, transpose_b=True)
+            # Dense layer with ReLU activation after BERT
+            dense_output = tf.matmul(output_layer, dense_weights, tranpose_b=True)
+            dense_output = tf.add(dense_output, dense_bias)
+            dense_output = tf.nn.relu(dense_output)
+
+            logits = tf.matmul(dense_output, output_weights, transpose_b=True)
             logits = tf.add(logits, output_bias)
             log_probs = tf.nn.log_softmax(logits, axis=-1)
 
