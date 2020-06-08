@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import tensorflow as tf
@@ -38,6 +39,7 @@ class BERTTrainer():
         self.save_summary_every = save_summary_every
         self.bert_model_hub = bert_model_hub
         self.output_dir = output_dir
+        self.checkpoint_dir = output_dir if os.path.exists(output_dir) else None
         self.is_training = is_training
         print('Saving models to {}'.format(output_dir))
         self._train_and_test_features_from_df()
@@ -219,7 +221,7 @@ class BERTTrainer():
         self.estimator = tf.estimator.Estimator(
                 model_fn=model_fn,
                 config=run_config,
-                warm_start_from=self.output_dir,
+                warm_start_from=self.checkpoint_dir,
                 params={"batch_size": self.batch_size})
 
     # Create an input function for training. drop_remainder = True for using TPUs.
