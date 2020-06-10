@@ -25,7 +25,7 @@ class BERTTrainer():
     def __init__(self, data, batch_size=32, max_seq_length=128,
             learning_rate=2e-5, num_train_epochs=3,
             warmup_proportion=0.1, save_checkpoints_every=500,
-            save_summary_every=100,
+            save_summary_every=100, dropout_rate=0.5,
             is_training=True,
             bert_model_hub="https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1",
             output_dir="bert_output"):
@@ -37,6 +37,7 @@ class BERTTrainer():
         self.warmup_proportion = warmup_proportion
         self.save_checkpoints_every = save_checkpoints_every
         self.save_summary_every = save_summary_every
+        self.dropout_rate = dropout_rate
         self.bert_model_hub = bert_model_hub
         self.output_dir = output_dir
         self.checkpoint_dir = output_dir if os.path.exists(output_dir) else None
@@ -92,7 +93,16 @@ class BERTTrainer():
 
     def _create_model(self, is_predicting, input_ids, input_mask, segment_ids, labels,
             num_labels):
-        """Creates a classification model."""
+        """ Creates a classification model.
+
+        Args:
+            is_predicting: Boolean to toggle training or testing mode.
+            (input_ids, input_mask, segment_ids, labels): Output of
+                bert.run_classifier.convert_examples_to_features
+            num_labels: Number of classes to classify.
+        Returns:
+            If training, loss and prediction tensors, otherwise just prediction tensors.
+        """
 
         bert_module = hub.Module(
                 self.bert_model_hub,
@@ -125,8 +135,7 @@ class BERTTrainer():
         with tf.variable_scope("loss"):
 
             # Dropout helps prevent overfitting during training
-            if not is_predicting:
-                output_layer = tf.nn.dropout(output_layer, keep_prob=0.9)
+            output_layer = tf.nn.dropout(output_layer, keep_prob=self.dropout_rate, seed=42)
 
             logits = tf.matmul(output_layer, output_weights, transpose_b=True)
             logits = tf.add(logits, output_bias)

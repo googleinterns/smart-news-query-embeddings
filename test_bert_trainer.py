@@ -26,6 +26,7 @@ if __name__ == '__main__':
     parser.add_argument('--learning-rate', '-l', default=2e-5, type=float)
     parser.add_argument('--max-seq-length', default=128, type=int)
     parser.add_argument('--warmup-proportion', default=0.1, type=float)
+    parser.add_argument('--dropout-rate', default=0.5, type=float)
     parser.add_argument('--num-train-epochs', '-n', default=3, type=int)
     parser.add_argument('--save-checkpoints-every', default=500, type=int)
     parser.add_argument('--save-summary-every', default=100, type=int)
@@ -42,6 +43,7 @@ if __name__ == '__main__':
         num_train_epochs=args.num_train_epochs,
         save_checkpoints_every=args.save_checkpoints_every,
         save_summary_every=args.save_summary_every,
+        dropout_rate=args.dropout_rate,
         output_dir=args.output_dir,
         is_training=args.training,
     )
