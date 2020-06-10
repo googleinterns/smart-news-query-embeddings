@@ -6,13 +6,13 @@ them to a cache.
 import time
 import os
 import datetime
+from nytimesarticle import articleAPI
 import pandas as pd
 # News archive api
 import requests
 
 from dateutil.rrule import rrule, MONTHLY
 NYT_KEY = open('nyt_key.txt').read().strip()
-from nytimesarticle import articleAPI
 api = articleAPI(NYT_KEY)
 
 def parse_articles(articles):
