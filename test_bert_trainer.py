@@ -22,7 +22,8 @@ class TestBERT(unittest.TestCase):
 
         train_features, test_features, _, label_list = train_and_test_features_from_df(data, data_column, label_column, trainer.bert_model_hub, trainer.max_seq_length)
         trainer.train(train_features, label_list)
-        trainer.test(test_features)
+        results = trainer.test(test_features)
+        print('Evaluation results:', results)
 
 if __name__ == '__main__':
     unittest.main()
