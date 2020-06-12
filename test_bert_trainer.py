@@ -24,6 +24,10 @@ class TestBERT(unittest.TestCase):
         trainer.train(train_features, label_list)
         results = trainer.test(test_features)
         print('Evaluation results:', results)
+        results2 = trainer.test(test_features)
+        print('Evaluation results:', results2)
+        eval_acc1, eval_acc2 = results['eval_accuracy'], results2['eval_accuracy']
+        assertEqual(eval_acc1, eval_acc2)
 
 if __name__ == '__main__':
     unittest.main()
