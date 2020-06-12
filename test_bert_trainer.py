@@ -20,19 +20,19 @@ class TestBERT(unittest.TestCase):
         data_column = 'abstract'
         label_column = 'section'
 
-        train_features, test_features, _, label_list = train_and_test_features_from_df(
+        train_features, self.test_features, _, self.label_list = train_and_test_features_from_df(
                 data, data_column, label_column, self.trainer.bert_model_hub,
                 self.trainer.max_seq_length)
-        self.trainer.train(train_features, label_list)
+        self.trainer.train(train_features, self.label_list)
 
     def test_train(self):
         self.train_model()
 
     def test_train_and_test(self):
         self.train_model()
-        results = self.trainer.test(test_features)
+        results = self.trainer.test(self.test_features)
         print('Evaluation results:', results)
-        results2 = self.trainer.test(test_features)
+        results2 = self.trainer.test(self.test_features)
         print('Evaluation results:', results2)
         eval_acc1, eval_acc2 = results['eval_accuracy'], results2['eval_accuracy']
         self.assertEqual(eval_acc1, eval_acc2)
@@ -46,7 +46,7 @@ class TestBERT(unittest.TestCase):
             "test four",
             "test one",
         ] * 5
-        preds = self.trainer.predict(input_sentences)
+        preds = self.trainer.predict(input_sentences, self.label_list)
 
 if __name__ == '__main__':
     unittest.main()
