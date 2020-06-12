@@ -163,9 +163,9 @@ class BERTTrainer():
         self.estimator.train(input_fn=train_input_fn, max_steps=self.num_train_steps)
         print("Training took time ", datetime.now() - current_time)
 
-    def test_model(self):
+    def test(self, test_features):
         test_input_fn = run_classifier.input_fn_builder(
-                features=self.test_features,
+                features=test_features,
                 seq_length=self.max_seq_length,
                 is_training=False,
                 drop_remainder=False)

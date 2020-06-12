@@ -19,11 +19,10 @@ class TestBERT(unittest.TestCase):
         })
         data_column = 'abstract'
         label_column = 'section'
-        max_seq_length = 128
-        bert_model_hub = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
 
-        train_features, _, _, label_list = train_and_test_features_from_df(data, data_column, label_column, bert_model_hub, max_seq_length)
+        train_features, test_features, _, label_list = train_and_test_features_from_df(data, data_column, label_column, trainer.bert_model_hub, trainer.max_seq_length)
         trainer.train(train_features, label_list)
+        trainer.test(test_features)
 
 if __name__ == '__main__':
     unittest.main()
