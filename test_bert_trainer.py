@@ -28,6 +28,8 @@ class TestBERT(unittest.TestCase):
         print('Evaluation results:', results2)
         eval_acc1, eval_acc2 = results['eval_accuracy'], results2['eval_accuracy']
         self.assertEqual(eval_acc1, eval_acc2)
+        loss1, loss2 = results['loss'], results2['loss']
+        self.assertEqual(eval_acc1, eval_acc2)
 
 if __name__ == '__main__':
     unittest.main()
