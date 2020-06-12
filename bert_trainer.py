@@ -194,19 +194,20 @@ class BERTTrainer():
 
         return self.estimator.evaluate(input_fn=test_input_fn, steps=None)
 
-    def predict(self, inputs):
+    def predict(self, inputs, label_list):
         """Predict classes for new inputs.
         Arguments:
             inputs: An iterable of string inputs to classify.
+            labels: An iterable of labels to use for classification.
         Returns:
             A list of class labels corresponding to the input at
             each index.
         """
         input_examples = [run_classifier.InputExample(
             guid="", text_a=x, text_b=None,
-            label=self.label_list[0]) for x in inputs] # here, "" is just a dummy label
+            label=label_list[0]) for x in inputs] # here, "" is just a dummy label
         input_features = run_classifier.convert_examples_to_features(
-            input_examples, self.label_list, self.max_seq_length, self.tokenizer)
+            input_examples, label_list, self.max_seq_length, self.tokenizer)
         predict_input_fn = run_classifier.input_fn_builder(
             features=input_features, seq_length=self.max_seq_length, is_training=False,
             drop_remainder=False)
