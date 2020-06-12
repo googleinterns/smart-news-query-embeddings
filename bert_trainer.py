@@ -149,6 +149,14 @@ class BERTTrainer():
 
     # Create an input function for training. drop_remainder = True for using TPUs.
     def train(self, train_features, label_list):
+        """ Train the BERT model.
+        
+        Arguments:
+            train_features: Features to train on as outputted from
+            train_and_test_features_from_df
+            label_list: List of all unique label classes
+        """
+
         self.train_features = train_features
         self.label_list = label_list
         self._create_estimator()
@@ -164,6 +172,20 @@ class BERTTrainer():
         print("Training took time ", datetime.now() - current_time)
 
     def test(self, test_features):
+        """Evalute the model on validation data.
+
+        Arguments:
+            test_features: Features to validate on as outputted from
+            train_and_test_features_from_df
+        Returns:
+            A dictionary with the following keys:
+            {
+                'eval_accuracy': Evaluation accuracy,
+                'loss': Value of the mean loss across test examples,
+                'global_step': Number of training steps completed
+            }
+        """
+
         test_input_fn = run_classifier.input_fn_builder(
                 features=test_features,
                 seq_length=self.max_seq_length,
@@ -173,6 +195,13 @@ class BERTTrainer():
         return self.estimator.evaluate(input_fn=test_input_fn, steps=None)
 
     def predict(self, inputs):
+        """Predict classes for new inputs.
+        Arguments:
+            inputs: An iterable of string inputs to classify.
+        Returns:
+            A list of class labels corresponding to the input at
+            each index.
+        """
         input_examples = [run_classifier.InputExample(
             guid="", text_a=x, text_b=None,
             label=self.label_list[0]) for x in inputs] # here, "" is just a dummy label

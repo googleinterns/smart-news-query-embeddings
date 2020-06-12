@@ -5,6 +5,15 @@ import bert
 import bert.run_classifier
 
 def train_and_test_features_from_df(data, data_column, label_column, bert_model_hub, max_seq_length):
+    """Use BERT preprocessor and preform 80-20 train-test split on training data.
+
+    Arguments:
+        data: A Pandas DataFrame containing the training data.
+        data_column: Name of the column containing the input sentences.
+        label_column: Name of the column containing the class labels.
+        bert_model_hub: URL of the BERT TF Hub module to use.
+        max_seq_length: Maximum number of tokens to allow in the tokenized sequences.
+    """
     train, test = train_test_split(data, test_size=0.2, random_state=42)
 
     label_list = list(data[label_column].unique())
