@@ -5,14 +5,15 @@ import bert
 import bert.run_classifier
 
 def featurize_labeled_sentences(input_sentences, input_labels, tokenizer, max_seq_length):
-    """Run BERT preprocessor and perform 80-20 train-test split on training data.
+    """Run BERT preprocessor on labeled sentences for training.
 
     Arguments:
-        data: A Pandas DataFrame containing the training data.
-        data_column: Name of the column containing the input sentences.
-        label_column: Name of the column containing the class labels.
-        bert_model_hub: URL of the BERT TF Hub module to use.
-        max_seq_length: Maximum number of tokens to allow in the tokenized sequences.
+        input_sentences: Iterable of strings to classify.
+        input_labels: Iterable of labels associated with each string.
+        tokenizer: The BERT preprocessor to use for tokenization.
+        max_seq_length: Maximum number of tokens in input sequences.
+    Returns:
+        A list of InputFeature instances that can be consumed by the BERT model.
     """
 
     label_list = list(input_labels.unique())
@@ -30,14 +31,15 @@ def featurize_labeled_sentences(input_sentences, input_labels, tokenizer, max_se
     return input_features, label_list
 
 def featurize_unlabeled_sentences(input_sentences, label_list, tokenizer, max_seq_length):
-    """Run BERT preprocessor and perform 80-20 train-test split on training data.
+    """Run BERT preprocessor on input sentences with no labels, for prediction.
 
     Arguments:
-        data: A Pandas DataFrame containing the training data.
-        data_column: Name of the column containing the input sentences.
-        label_column: Name of the column containing the class labels.
-        bert_model_hub: URL of the BERT TF Hub module to use.
-        max_seq_length: Maximum number of tokens to allow in the tokenized sequences.
+        input_sentences: Iterable of strings to classify.
+        label_list: List of possible labels, e.g. 0, 1, "dog", "cat", etc.
+        tokenizer: The BERT preprocessor to use for tokenization.
+        max_seq_length: Maximum number of tokens in input sequences.
+    Returns:
+        A list of InputFeature instances that can be consumed by the BERT model.
     """
 
     input_examples = [bert.run_classifier.InputExample(
@@ -54,7 +56,12 @@ def featurize_unlabeled_sentences(input_sentences, label_list, tokenizer, max_se
 
 
 def create_tokenizer_from_hub_module(bert_model_hub):
-    """Get the vocab file and casing info from the Hub module."""
+    """Get the vocab file and casing info from the Hub module.
+    Arguments:
+        bert_model_hub: The URL of the TF Hub BERT module to use.
+    Returns:
+        A tokenizer that can be used for preprocessing.
+    """
     with tf.Graph().as_default():
         bert_module = hub.Module(bert_model_hub)
         tokenization_info = bert_module(signature="tokenization_info", as_dict=True)

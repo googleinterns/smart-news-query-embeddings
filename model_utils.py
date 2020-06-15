@@ -9,10 +9,12 @@ def create_model(bert_model_hub, is_predicting, input_ids, input_mask,
         """ Creates a classification model.
 
         Args:
+            bert_model_hub: URL of the TF Hub BERT module to use.
             is_predicting: Boolean to toggle training or testing mode.
             (input_ids, input_mask, segment_ids, labels): Output of
                 bert.run_classifier.convert_examples_to_features
             num_labels: Number of classes to classify.
+            dropout_rate: Keep probability of the dropout layer in the model.
         Returns:
             If training, loss and prediction tensors, otherwise just prediction tensors.
         """
@@ -67,7 +69,15 @@ def create_model(bert_model_hub, is_predicting, input_ids, input_mask,
 
 def model_fn_builder(bert_model_hub, num_labels, learning_rate, num_train_steps,
         num_warmup_steps, dropout_rate):
-    """Returns `model_fn` closure for TPUEstimator."""
+    """Returns `model_fn` closure for TPUEstimator.
+    Arguments:
+        bert_model_hub: The URL of the TF Hub BERT module to use.
+        num_labels: The number of classes to output.
+        learning_rate: Learning rate during training.
+        num_training_steps: Total number of steps during training across all epochs.
+        num_warmup_steps: Number of steps with very low learning rate before starting training.
+        dropout_rate: Keep probability in the dropout layer of the model.
+    """
     def model_fn(features, labels, mode, params):  # pylint: disable=unused-argument
         """The `model_fn` for TPUEstimator.
 
