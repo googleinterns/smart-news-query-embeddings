@@ -6,9 +6,10 @@ them to a cache.
 import time
 import os
 import datetime
+import argparse
+# News archive api
 from nytimesarticle import articleAPI
 import pandas as pd
-# News archive api
 import requests
 
 from dateutil.rrule import rrule, MONTHLY
@@ -38,6 +39,8 @@ def parse_articles(articles):
             dic['abstract'] = i.get('abstract', 'EMPTY').encode("utf8")
         dic['headline'] = i['headline']['main'].encode("utf8")
         dic['desk'] = i.get('news_desk', 'EMPTY')
+        if len(i['pub_date']) < 20:
+            continue
         dic['date'] = i['pub_date'][0:10] # cutting time of day.
         dic['time'] = i['pub_date'][11:19]
         dic['section'] = i.get('section_name', 'EMPTY')
@@ -58,6 +61,7 @@ def day_interval(days_back):
 def bulk_look_up(start_year):
     # create a list of year, month, pairs for the data
     # from start dt to end date inclusive
+    # Source of API data: https://developer.nytimes.com/docs/archive-product/1/overview
     start_dt = datetime.date(start_year, 1, 1)
     end_dt = datetime.datetime.today()
     dates = [(dt.year, dt.month) for dt in rrule(MONTHLY, dtstart=start_dt, until=end_dt)]
@@ -85,4 +89,8 @@ def download_or_cache(start_year):
     return df
 
 if __name__ == '__main__':
-    download_or_cache(2015)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--start-year', default=2015, type=int)
+
+    args = parser.parse_args()
+    download_or_cache(args.start_year)
