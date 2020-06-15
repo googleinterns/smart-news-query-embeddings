@@ -11,29 +11,22 @@ class TestBERT(unittest.TestCase):
         super(TestBERT, self).__init__(*args, **kwargs)
         self.output_dir = 'test_{}'.format(str(int(time.time())))
         self.trainer = BERTTrainer(output_dir=self.output_dir)
-
-    def train_model(self):
-        data = pd.DataFrame({
+        self.data = pd.DataFrame({
             'abstract': ['test one', 'test two', 'test three'] * 5,
             'section': ['U.S.', 'Arts', 'U.S.'] * 5,
         })
-        data_column = 'abstract'
-        label_column = 'section'
 
-        train_features, self.test_features, _, self.label_list = train_and_test_features_from_df(
-                data, data_column, label_column, self.trainer.bert_model_hub,
-                self.trainer.max_seq_length)
-        self.trainer.train(train_features, self.label_list)
+    def train_model(self):
+        self.trainer.train(self.data['abstract'], self.data['section'])
 
     def test_train(self):
         self.train_model()
+        shutil.rmtree(self.output_dir)
 
     def test_train_and_test(self):
         self.train_model()
-        results = self.trainer.test(self.test_features)
-        print('Evaluation results:', results)
-        results2 = self.trainer.test(self.test_features)
-        print('Evaluation results:', results2)
+        results = self.trainer.evaluate(self.data['abstract'], self.data['section'])
+        results2 = self.trainer.evaluate(self.data['abstract'], self.data['section'])
         eval_acc1, eval_acc2 = results['eval_accuracy'], results2['eval_accuracy']
         self.assertEqual(eval_acc1, eval_acc2)
         loss1, loss2 = results['loss'], results2['loss']
@@ -46,7 +39,8 @@ class TestBERT(unittest.TestCase):
             "test four",
             "test one",
         ] * 5
-        preds = self.trainer.predict(input_sentences, self.label_list)
+        preds = self.trainer.predict(input_sentences)
+        shutil.rmtree(self.output_dir)
 
 if __name__ == '__main__':
     unittest.main()

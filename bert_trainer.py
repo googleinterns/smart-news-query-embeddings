@@ -10,6 +10,7 @@ from datetime import datetime
 import bert
 from bert import run_classifier
 import utils
+import model_utils
 
 """
 Wrapper class to set up BERT model. Takes in Pandas DataFrame
@@ -42,85 +43,9 @@ class BERTTrainer():
         self.output_dir = output_dir
         self.checkpoint_dir = output_dir if os.path.exists(output_dir) else None
         self.is_training = is_training
+        self.tokenizer = utils.create_tokenizer_from_hub_module(self.bert_model_hub)
         print('Saving models to {}'.format(output_dir))
         # self._train_and_test_features_from_df()
-
-    '''
-    Compute 80-20 train-valid split from data, and tokenize/pad sequences
-    into required BERT input form.
-    '''
-
-    """ model_fn_builder actually creates our model function using the passed parameters for num_labels, learning_rate, etc.
-
-    Arguments:
-        num_labels: The number of classes in our classification model.
-        learning_rate: Float between 0 and 1 for learning rate.
-        num_train_steps: An integer for the number of training steps to run.
-        num_warmup_steps: An integer for the number of warmup steps to run before training.
-    """
-    def _model_fn_builder(self, num_labels, learning_rate, num_train_steps,
-            num_warmup_steps):
-        """Returns `model_fn` closure for TPUEstimator."""
-        def model_fn(features, labels, mode, params):  # pylint: disable=unused-argument
-            """The `model_fn` for TPUEstimator.
-
-            Arguments:
-                features: list of features outputted by convert_examples_to_features
-                labels: unused variable, required in model_fn signature.
-                mode: are we training or testing?
-                params: hyperparameters for the training process
-            Returns:
-                A tf.EstimatorSpec used internally by the estimator instance.
-            """
-
-            input_ids = features["input_ids"]
-            input_mask = features["input_mask"]
-            segment_ids = features["segment_ids"]
-            label_ids = features["label_ids"]
-
-            is_predicting = (mode == tf.estimator.ModeKeys.PREDICT)
-
-            # TRAIN and EVAL
-            if not is_predicting:
-
-                print(self.bert_model_hub)
-                (loss, predicted_labels, log_probs) = utils.create_model(
-                        self.bert_model_hub, is_predicting, input_ids, input_mask, segment_ids, label_ids,
-                        num_labels, self.dropout_rate)
-
-                train_op = bert.optimization.create_optimizer(
-                        loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu=False)
-
-                # Calculate evaluation metrics.
-                def metric_fn(label_ids, predicted_labels):
-                    accuracy = tf.metrics.accuracy(label_ids, predicted_labels)
-                    return {
-                            "eval_accuracy": accuracy,
-                            }
-
-                eval_metrics = metric_fn(label_ids, predicted_labels)
-
-                if mode == tf.estimator.ModeKeys.TRAIN:
-                    return tf.estimator.EstimatorSpec(mode=mode,
-                            loss=loss,
-                            train_op=train_op)
-                else:
-                    return tf.estimator.EstimatorSpec(mode=mode,
-                            loss=loss,
-                            eval_metric_ops=eval_metrics)
-            else:
-                (predicted_labels, log_probs) = utils.create_model(
-                        is_predicting, input_ids, input_mask, segment_ids, label_ids, num_labels)
-
-                predictions = {
-                        'probabilities': log_probs,
-                        'labels': predicted_labels
-                        }
-                return tf.estimator.EstimatorSpec(mode, predictions=predictions)
-
-        # Return the actual model function in the closure
-        return model_fn
-
 
     def _create_estimator(self):
         # Compute train and warmup steps from batch size
@@ -135,11 +60,13 @@ class BERTTrainer():
                 save_summary_steps=self.save_summary_every,
                 save_checkpoints_steps=self.save_checkpoints_every)
 
-        model_fn = self._model_fn_builder(
+        model_fn = model_utils.model_fn_builder(
+                bert_model_hub=self.bert_model_hub,
                 num_labels=len(self.label_list),
                 learning_rate=self.learning_rate,
                 num_train_steps=self.num_train_steps,
-                num_warmup_steps=self.num_warmup_steps)
+                num_warmup_steps=self.num_warmup_steps,
+                dropout_rate=self.dropout_rate)
 
         self.estimator = tf.estimator.Estimator(
                 model_fn=model_fn,
@@ -148,17 +75,16 @@ class BERTTrainer():
                 params={"batch_size": self.batch_size})
 
     # Create an input function for training. drop_remainder = True for using TPUs.
-    def train(self, train_features, label_list):
+    def train(self, train_inputs, train_labels):
         """ Train the BERT model.
         
         Arguments:
-            train_features: Features to train on as outputted from
-            train_and_test_features_from_df
-            label_list: List of all unique label classes
+            train_inputs: Iterable of strings to train on.
+            train_labels: Iterable of labels corresponding to each input.
         """
 
-        self.train_features = train_features
-        self.label_list = label_list
+        self.train_features, self.label_list = utils.featurize_labeled_sentences(
+            train_inputs, train_labels, self.tokenizer, self.max_seq_length)
         self._create_estimator()
         train_input_fn = bert.run_classifier.input_fn_builder(
                 features=self.train_features,
@@ -171,12 +97,12 @@ class BERTTrainer():
         self.estimator.train(input_fn=train_input_fn, max_steps=self.num_train_steps)
         print("Training took time ", datetime.now() - current_time)
 
-    def test(self, test_features):
-        """Evalute the model on validation data.
+    def evaluate(self, test_inputs, test_labels):
+        """Evaluate the model on validation data.
 
         Arguments:
-            test_features: Features to validate on as outputted from
-            train_and_test_features_from_df
+            test_sentences: Iterable of strings to classify
+            test_labels: Iterable of labels corresponding to each string
         Returns:
             A dictionary with the following keys:
             {
@@ -186,6 +112,9 @@ class BERTTrainer():
             }
         """
 
+        test_features, _ = utils.featurize_labeled_sentences(
+            test_inputs, test_labels, self.tokenizer, self.max_seq_length)
+
         test_input_fn = run_classifier.input_fn_builder(
                 features=test_features,
                 seq_length=self.max_seq_length,
@@ -194,20 +123,16 @@ class BERTTrainer():
 
         return self.estimator.evaluate(input_fn=test_input_fn, steps=None)
 
-    def predict(self, inputs, label_list):
+    def predict(self, inputs):
         """Predict classes for new inputs.
         Arguments:
             inputs: An iterable of string inputs to classify.
-            labels: An iterable of labels to use for classification.
         Returns:
             A list of class labels corresponding to the input at
             each index.
         """
-        input_examples = [run_classifier.InputExample(
-            guid="", text_a=x, text_b=None,
-            label=label_list[0]) for x in inputs] # here, "" is just a dummy label
-        input_features = run_classifier.convert_examples_to_features(
-            input_examples, label_list, self.max_seq_length, self.tokenizer)
+        input_features = utils.featurize_unlabeled_sentences(
+            inputs, self.label_list, self.tokenizer, self.max_seq_length)
         predict_input_fn = run_classifier.input_fn_builder(
             features=input_features, seq_length=self.max_seq_length, is_training=False,
             drop_remainder=False)

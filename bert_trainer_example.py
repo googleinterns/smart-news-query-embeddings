@@ -4,6 +4,7 @@ Example of how to use the BERTTrainer class.
 
 import argparse
 import pandas as pd
+from sklearn.model_selection import train_test_split
 from bert_trainer import BERTTrainer
 
 def get_filtered_nyt_data(data_path):
@@ -35,7 +36,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     nyt_data = get_filtered_nyt_data('nyt_data_from_2015.pkl')
-    trainer = BERTTrainer(nyt_data,
+    trainer = BERTTrainer(
         batch_size=args.batch_size,
         learning_rate=args.learning_rate,
         max_seq_length=args.max_seq_length,
@@ -47,8 +48,9 @@ if __name__ == '__main__':
         output_dir=args.output_dir,
         is_training=args.training,
     )
-    trainer.train_model()
-    eval_accuracy_info = trainer.test_model()
+    X_train, X_test, Y_train, Y_test = train_test_split(nyt_data['abstract'], nyt_data['section'])
+    trainer.train(X_train, Y_train)
+    eval_accuracy_info = trainer.evaluate(X_test, Y_test)
     print(eval_accuracy_info)
     preds = trainer.predict([
         "Donald Trump",
