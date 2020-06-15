@@ -97,32 +97,6 @@ class BERTTrainer():
         self.estimator.train(input_fn=train_input_fn, max_steps=self.num_train_steps)
         print("Training took time ", datetime.now() - current_time)
 
-    def evaluate(self, test_inputs, test_labels):
-        """Evaluate the model on validation data.
-
-        Arguments:
-            test_sentences: Iterable of strings to classify
-            test_labels: Iterable of labels corresponding to each string
-        Returns:
-            A dictionary with the following keys:
-            {
-                'eval_accuracy': Evaluation accuracy,
-                'loss': Value of the mean loss across test examples,
-                'global_step': Number of training steps completed
-            }
-        """
-
-        test_features, _ = utils.featurize_labeled_sentences(
-            test_inputs, test_labels, self.tokenizer, self.max_seq_length)
-
-        test_input_fn = run_classifier.input_fn_builder(
-                features=test_features,
-                seq_length=self.max_seq_length,
-                is_training=False,
-                drop_remainder=False)
-
-        return self.estimator.evaluate(input_fn=test_input_fn, steps=None)
-
     def predict(self, inputs):
         """Predict classes for new inputs.
         Arguments:
