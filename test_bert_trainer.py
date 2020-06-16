@@ -23,16 +23,6 @@ class TestBERT(unittest.TestCase):
         self.train_model()
         shutil.rmtree(self.output_dir)
 
-    def test_train_and_test(self):
-        self.train_model()
-        results = self.trainer.evaluate(self.data['abstract'], self.data['section'])
-        results2 = self.trainer.evaluate(self.data['abstract'], self.data['section'])
-        eval_acc1, eval_acc2 = results['eval_accuracy'], results2['eval_accuracy']
-        self.assertEqual(eval_acc1, eval_acc2)
-        loss1, loss2 = results['loss'], results2['loss']
-        self.assertEqual(eval_acc1, eval_acc2)
-        shutil.rmtree(self.output_dir)
-
     def test_train_and_predict(self):
         self.train_model()
         input_sentences = [
