@@ -54,10 +54,5 @@ if __name__ == '__main__':
     X_train, X_test, Y_train, Y_test = train_test_split(nyt_data['abstract'], nyt_data['section'], test_size=0.2, random_state=42)
     trainer.train(X_train, Y_train)
     preds = trainer.predict(X_test)
-    for x, y, z in zip(X_test, preds, Y_test):
-        print('Input: {}'.format(x))
-        print('Prediction: {}'.format(y))
-        print('Actual: {}'.format(z))
-    print(np.mean(np.array(preds) == np.array(Y_test)))
-
-    # can use these predicted values to compute various other eval metrics 
+    eval_acc = np.mean(np.array(preds) == np.array(Y_test)) # can use these predicted values to compute various other eval metrics 
+    print('Evaluation accuracy: {}'.format(eval_acc))
