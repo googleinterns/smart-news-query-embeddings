@@ -65,18 +65,29 @@ def bulk_look_up(start_year):
     start_dt = datetime.date(start_year, 1, 1)
     end_dt = datetime.datetime.today()
     dates = [(dt.year, dt.month) for dt in rrule(MONTHLY, dtstart=start_dt, until=end_dt)]
+    wait = 20
 
     dfs = []
     for year, month in dates:
-        url = (
-            "https://api.nytimes.com/svc/archive/v1/{year}/{month}.json?&api-key={key}"
-            .format(year=year, month=month, key=NYT_KEY)
-        )
-        r = requests.get(url)
-        print(r.json())
-        df = parse_articles(r.json())
-        print('Got articles for {}/{}'.format(month, year))
+        found_df = False
+        for i in range(20):
+            try:
+                url = (
+                    "https://api.nytimes.com/svc/archive/v1/{year}/{month}.json?&api-key={key}"
+                    .format(year=year, month=month, key=NYT_KEY)
+                )
+                r = requests.get(url)
+                df = parse_articles(r.json())
+                found_df = True
+                break
+            except:
+                print(f'Error when getting articles, trying again in {wait} seconds...')
+                continue
+        if not found_df:
+            continue
+        print('Got {} articles for {}/{}'.format(df.shape[0], month, year))
         dfs.append(df)
+        print(f'Waiting {wait} seconds for next request...')
         time.sleep(20)
     return pd.concat(dfs, ignore_index=True)
 
