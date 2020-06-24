@@ -5,6 +5,20 @@ import tensorflow as tf
 
 class BertKerasModel():
 
+    """Implementation of the BERT network using Keras.
+
+    Arguments:
+
+        num_classes: Required, number of classes to output probabilities for in the softmax layer.
+        output_dir: Optional, name of directory to save trained model to.
+        bert_dir: Path to downloaded BERT module.
+        max_seq_length: Maximum number of tokens in input sequences.
+        dense_size: Size of hidden dense layer between BERT output and softmax.
+        learning_rate: Learning rate to use during training.
+        epochs: Number of epochs to train for.
+        batch_size: Batch size to use during training.
+    """
+
     def __init__(self, num_classes, output_dir=None, bert_dir='uncased_L-12_H-768_A-12', max_seq_length=128, dense_size=256, learning_rate=1e-5, epochs=1, batch_size=32):
 
         self.output_dir = output_dir
@@ -43,6 +57,16 @@ class BertKerasModel():
         return bert_layer
 
     def fit(self, x, y, x_valid, y_valid):
+        """Trains the model.
+
+        Arguments:
+            x: Training input sequences
+            y: Training input labels
+            x_valid: Validation input sequences
+            y_valid: Validation input labels
+        """
+
         self.model.fit(x, y, validation_data=(x_valid, y_valid), epochs=self.epochs, batch_size=self.batch_size)
 
-        self.model.save(self.output_dir)
+        if self.output_dir is not None:
+            self.model.save(self.output_dir)

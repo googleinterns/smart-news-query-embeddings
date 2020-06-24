@@ -8,6 +8,16 @@ import bert
 from sklearn.model_selection import train_test_split
 
 def get_filtered_nyt_data(data_path):
+
+    """Reads in the NYT article data.
+
+    Arguments:
+        data_path: Path to the data pickle file.
+
+    Returns:
+        The filtered NYT data with only major categories included.
+    """
+
     print('Reading data...')
     df = pd.read_pickle(data_path)
     sections = df[['section', 'desk']].drop_duplicates()
@@ -20,18 +30,48 @@ def get_filtered_nyt_data(data_path):
     return filtered
 
 def get_filtered_nyt_data_with_scores(data_path):
+
+    """Reads in the NYT article data containing specificity scores.
+
+    Arguments:
+        data_path: Path to the data pickle file.
+
+    Returns:
+        The filtered NYT data with only unique rows that have a specificity score included.
+    """
+
     print('Reading data...')
     df = pd.read_pickle(data_path)
     filtered_df = df[~df['normalized_abstract_score'].isnull()].drop_duplicates().sort_values('normalized_abstract_score')
     return filtered_df
 
 def create_tokenizer(model_dir):
+
+    """Creates a BERT pre-processor from a module.
+
+    Arguments:
+        model_dir: Path to the downloaded BERT module.
+
+    Returns:
+        A BERT tokenizer that can be used to generate input sequences.
+    """
+
     vocab_file = os.path.join(model_dir, "vocab.txt")
 
     tokenizer = bert.bert_tokenization.FullTokenizer(vocab_file, do_lower_case=True)
     return tokenizer
 
 def tokenize_data(inputs, labels, tokenizer, max_seq_length, num_classes):
+
+    """Creates input sequences and one-hot encoded labels from raw input.
+
+    Arguments:
+        inputs: List of input sentences.
+        labels: List of input labels as integers.
+        tokenizer: A BERT tokenizer as instantiated from create_tokenizer().
+        max_seq_length: Maximum number of tokens to include in the sequences.
+        num_classes: Total number of classes in the input labels.
+    """
 
     train_labels = []
     for l in labels:
