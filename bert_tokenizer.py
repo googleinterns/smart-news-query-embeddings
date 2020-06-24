@@ -7,8 +7,6 @@ import bert
 
 from sklearn.model_selection import train_test_split
 
-max_seq_length = 128
-
 def get_filtered_nyt_data(data_path):
     print('Reading data...')
     df = pd.read_pickle(data_path)
@@ -21,17 +19,23 @@ def get_filtered_nyt_data(data_path):
     filtered = df[df['section'].isin(big_categories)]
     return filtered
 
+def get_filtered_nyt_data_with_scores(data_path):
+    print('Reading data...')
+    df = pd.read_pickle(data_path)
+    filtered_df = df[~df['normalized_abstract_score'].isnull()].drop_duplicates().sort_values('normalized_abstract_score')
+    return filtered_df
+
 def create_tokenizer(model_dir):
     vocab_file = os.path.join(model_dir, "vocab.txt")
 
     tokenizer = bert.bert_tokenization.FullTokenizer(vocab_file, do_lower_case=True)
     return tokenizer
 
-def tokenize_data(inputs, labels, tokenizer):
+def tokenize_data(inputs, labels, tokenizer, max_seq_length, num_classes):
 
     train_labels = []
     for l in labels:
-        one_hot = [0] * 10
+        one_hot = [0] * num_classes
         one_hot[l] = 1
         train_labels.append(one_hot)
 
