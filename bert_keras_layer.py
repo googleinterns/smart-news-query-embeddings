@@ -47,7 +47,7 @@ class BertKerasModel():
         self.epochs = epochs
         self.batch_size = batch_size
 
-        if os.path.exists(output_dir):
+        if output_dir is not None and os.path.exists(output_dir):
             print('Loading saved model from {}'.format(os.path.abspath(output_dir)))
             self.model = tf.keras.models.load_model(output_dir)
         else:
