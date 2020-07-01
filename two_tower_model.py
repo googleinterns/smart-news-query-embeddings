@@ -18,7 +18,7 @@ import time
 import argparse
 from bert_tokenizer import *
 from sklearn.model_selection import train_test_split
-from bert_keras_layer import BertKerasModel
+from bert_keras_model import BertKerasModel
 import tensorflow as tf
 from tensorflow.keras.layers import Dense, Input, Flatten, concatenate
 from tensorflow.keras.models import Model
@@ -47,111 +47,139 @@ class TwoTowerModel(BertKerasModel):
         z = Dense(2, activation="sigmoid", name="output_dense")(z)
         # our model will accept the inputs of the two branches and
         # then output a single value
-        self.model = Model(inputs=[x.input, y.input], outputs=z, name="two_tower_model")
-        self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=1e-3), metrics=['accuracy'])
+        self.output_layer = Model(inputs=[x.input, y.input], outputs=z, name="two_tower_model")
 
-        print(self.model.summary())
+    def call(self, inputs):
+        return self.output_layer(inputs)
 
-    def fit(self, train_inputs, train_labels, train_outputs, valid_inputs, valid_labels, valid_outputs):
-        super().fit((train_inputs, train_labels), train_outputs, (valid_inputs, valid_labels), valid_outputs)
+# class TwoTowerModel(BertKerasModel):
 
-# def create_tokenizer(model_dir):
+#     def build_model(self):
+#         # define two sets of inputs
+#         input_ids = Input(shape=(self.max_seq_length,), dtype='int32', name="input_ids")
+#         input_labels = Input(shape=(self.num_classes,), dtype='int32', name="input_labels")
+#         # the first branch operates on the first input
+#         bert_output = Flatten(name="flatten")(self.bert_layer(input_ids))
+#         x = Dense(self.dense_size, activation="relu", name="dense1_1")(bert_output)
+#         x = Dense(self.dense_size, activation="relu", name="dense1_2")(x)
+#         x = Model(inputs=input_ids, outputs=x, name="sub_model1")
+#         # the second branch opreates on the second input
+#         y = Dense(self.dense_size, activation="relu", name="dense2_1")(input_labels)
+#         y = Dense(self.dense_size, activation="relu", name="dense2_2")(y)
+#         y = Model(inputs=input_labels, outputs=y, name="sub_model2")
+#         # combine the output of the two branches
+#         combined = concatenate([x.output, y.output], name="concantenate")
+#         # apply a FC layer and then a classification prediction on the
+#         # combined outputs
+#         z = Dense(128, activation="relu", name="final_dense")(combined)
+#         z = Dense(2, activation="sigmoid", name="output_dense")(z)
+#         # our model will accept the inputs of the two branches and
+#         # then output a single value
+#         self.model = Model(inputs=[x.input, y.input], outputs=z, name="two_tower_model")
+#         self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=1e-3), metrics=['accuracy'])
 
-#     """Creates a BERT pre-processor from a module.
+#         print(self.model.summary())
 
-#     Arguments:
-#         model_dir: Path to the downloaded BERT module.
+#     def fit(self, train_inputs, train_labels, train_outputs, valid_inputs, valid_labels, valid_outputs):
+#         super().fit((train_inputs, train_labels), train_outputs, (valid_inputs, valid_labels), valid_outputs)
 
-#     Returns:
-#         A BERT tokenizer that can be used to generate input sequences.
-#     """
+# # def create_tokenizer(model_dir):
 
-#     vocab_file = os.path.join(model_dir, "vocab.txt")
+# #     """Creates a BERT pre-processor from a module.
 
-#     tokenizer = bert.bert_tokenization.FullTokenizer(vocab_file, do_lower_case=True)
-#     return tokenizer
+# #     Arguments:
+# #         model_dir: Path to the downloaded BERT module.
 
-# tokenizer = create_tokenizer('uncased_L-12_H-768_A-12')
+# #     Returns:
+# #         A BERT tokenizer that can be used to generate input sequences.
+# #     """
 
-# def tokenize_data(inputs, labels, tokenizer, max_seq_length, num_classes):
+# #     vocab_file = os.path.join(model_dir, "vocab.txt")
 
-#     """Creates input sequences and one-hot encoded labels from raw input.
+# #     tokenizer = bert.bert_tokenization.FullTokenizer(vocab_file, do_lower_case=True)
+# #     return tokenizer
 
-#     Arguments:
-#         inputs: List of input sentences.
-#         labels: List of input labels as integers.
-#         tokenizer: A BERT tokenizer as instantiated from create_tokenizer().
-#         max_seq_length: Maximum number of tokens to include in the sequences.
-#         num_classes: Total number of classes in the input labels.
-#     """
+# # tokenizer = create_tokenizer('uncased_L-12_H-768_A-12')
 
-#     train_labels = []
-#     for l in labels:
-#         one_hot = [0] * num_classes
-#         one_hot[l] = 1
-#         train_labels.append(one_hot)
+# # def tokenize_data(inputs, labels, tokenizer, max_seq_length, num_classes):
 
-#     train_tokens = map(tokenizer.tokenize, inputs)
-#     train_tokens = map(lambda tok: ["[CLS]"] + tok + ["[SEP]"], train_tokens)
-#     train_token_ids = list(map(tokenizer.convert_tokens_to_ids, train_tokens))
+# #     """Creates input sequences and one-hot encoded labels from raw input.
 
-#     train_token_ids = map(
-#         lambda tids: tids + [0] * (max_seq_length - len(tids)) if len(tids) <= 128 else tids[:128],
-#         train_token_ids)
-#     train_token_ids = list(train_token_ids)
-#     print(type(train_token_ids), type(train_token_ids[0]))
-#     train_token_ids = np.array(train_token_ids)
+# #     Arguments:
+# #         inputs: List of input sentences.
+# #         labels: List of input labels as integers.
+# #         tokenizer: A BERT tokenizer as instantiated from create_tokenizer().
+# #         max_seq_length: Maximum number of tokens to include in the sequences.
+# #         num_classes: Total number of classes in the input labels.
+# #     """
 
-#     train_labels_final = np.array(train_labels)
+# #     train_labels = []
+# #     for l in labels:
+# #         one_hot = [0] * num_classes
+# #         one_hot[l] = 1
+# #         train_labels.append(one_hot)
 
-#     return train_token_ids, train_labels_final
+# #     train_tokens = map(tokenizer.tokenize, inputs)
+# #     train_tokens = map(lambda tok: ["[CLS]"] + tok + ["[SEP]"], train_tokens)
+# #     train_token_ids = list(map(tokenizer.convert_tokens_to_ids, train_tokens))
 
-# MAX_SEQ_LENGTH = 128
-# NUM_CLASSES = 64
+# #     train_token_ids = map(
+# #         lambda tids: tids + [0] * (max_seq_length - len(tids)) if len(tids) <= 128 else tids[:128],
+# #         train_token_ids)
+# #     train_token_ids = list(train_token_ids)
+# #     print(type(train_token_ids), type(train_token_ids[0]))
+# #     train_token_ids = np.array(train_token_ids)
 
-# def get_filtered_nyt_data_with_scores(data_path):
+# #     train_labels_final = np.array(train_labels)
 
-#     """Reads in the NYT article data containing specificity scores.
+# #     return train_token_ids, train_labels_final
 
-#     Arguments:
-#         data_path: Path to the data pickle file.
+# # MAX_SEQ_LENGTH = 128
+# # NUM_CLASSES = 64
 
-#     Returns:
-#         The filtered NYT data with only unique rows that have a specificity score included.
-#     """
+# # def get_filtered_nyt_data_with_scores(data_path):
 
-#     print('Reading data...')
-#     df = pd.read_pickle(data_path)
-#     filtered_df = df[~df['normalized_abstract_score'].isnull()].drop_duplicates().sort_values('normalized_abstract_score')
-#     return filtered_df
+# #     """Reads in the NYT article data containing specificity scores.
 
-if __name__ == '__main__':
-    output_dir = 'bert_keras_output_{}'.format(int(time.time()))
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--batch-size', '-b', default=32, type=int)
-    parser.add_argument('--learning-rate', '-l', default=1e-5, type=float)
-    parser.add_argument('--max-seq-length', default=128, type=int)
-    parser.add_argument('--warmup-proportion', default=0.1, type=float)
-    parser.add_argument('--dropout-rate', default=0.5, type=float)
-    parser.add_argument('--num-train-epochs', '-n', default=3, type=int)
-    parser.add_argument('--dense-size', '-d', default=256, type=int)
-    parser.add_argument('--save-summary-every', default=100, type=int)
-    parser.add_argument('--output-dir', '-o', default=output_dir, type=str)
-    parser.add_argument('--training', '-t', default=True, type=bool)
-    parser.add_argument('--bert-dir', default='uncased_L-12_H-768_A-12', type=str)
-    args = parser.parse_args()
+# #     Arguments:
+# #         data_path: Path to the data pickle file.
 
-    all_train_ids = np.load('all_train_ids.npy')
-    all_train_labels = np.load('all_train_labels.npy')
-    all_train_outputs = np.load('all_train_outputs.npy')
-    all_test_ids = np.load('all_test_ids.npy')
-    all_test_labels = np.load('all_test_labels.npy')
-    all_test_outputs = np.load('all_test_outputs.npy')
+# #     Returns:
+# #         The filtered NYT data with only unique rows that have a specificity score included.
+# #     """
 
-    num_classes = all_train_labels.shape[1]
+# #     print('Reading data...')
+# #     df = pd.read_pickle(data_path)
+# #     filtered_df = df[~df['normalized_abstract_score'].isnull()].drop_duplicates().sort_values('normalized_abstract_score')
+# #     return filtered_df
 
-    model = TwoTowerModel(num_classes, bert_dir=args.bert_dir, output_dir=args.output_dir, batch_size=args.batch_size,
-        epochs=args.num_train_epochs, max_seq_length=args.max_seq_length, dense_size=args.dense_size,
-        learning_rate=args.learning_rate)
+# if __name__ == '__main__':
+#     output_dir = 'bert_keras_output_{}'.format(int(time.time()))
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument('--batch-size', '-b', default=32, type=int)
+#     parser.add_argument('--learning-rate', '-l', default=1e-5, type=float)
+#     parser.add_argument('--max-seq-length', default=128, type=int)
+#     parser.add_argument('--warmup-proportion', default=0.1, type=float)
+#     parser.add_argument('--dropout-rate', default=0.5, type=float)
+#     parser.add_argument('--num-train-epochs', '-n', default=3, type=int)
+#     parser.add_argument('--dense-size', '-d', default=256, type=int)
+#     parser.add_argument('--save-summary-every', default=100, type=int)
+#     parser.add_argument('--output-dir', '-o', default=output_dir, type=str)
+#     parser.add_argument('--training', '-t', default=True, type=bool)
+#     parser.add_argument('--bert-dir', default='uncased_L-12_H-768_A-12', type=str)
+#     args = parser.parse_args()
 
-    model.fit(all_train_ids, all_train_labels, all_train_outputs, all_test_ids, all_test_labels, all_test_outputs)
+#     all_train_ids = np.load('all_train_ids.npy')
+#     all_train_labels = np.load('all_train_labels.npy')
+#     all_train_outputs = np.load('all_train_outputs.npy')
+#     all_test_ids = np.load('all_test_ids.npy')
+#     all_test_labels = np.load('all_test_labels.npy')
+#     all_test_outputs = np.load('all_test_outputs.npy')
+
+#     num_classes = all_train_labels.shape[1]
+
+#     model = TwoTowerModel(num_classes, bert_dir=args.bert_dir, output_dir=args.output_dir, batch_size=args.batch_size,
+#         epochs=args.num_train_epochs, max_seq_length=args.max_seq_length, dense_size=args.dense_size,
+#         learning_rate=args.learning_rate)
+
+#     model.fit(all_train_ids, all_train_labels, all_train_outputs, all_test_ids, all_test_labels, all_test_outputs)
