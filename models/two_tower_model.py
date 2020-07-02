@@ -20,7 +20,7 @@ from bert_tokenizer import *
 from sklearn.model_selection import train_test_split
 from bert_keras_model import BertKerasModel
 import tensorflow as tf
-from tensorflow.keras.layers import Dense, Input, Flatten, concatenate
+from tensorflow.keras.layers import Dense, Input, Flatten, Dropout, concatenate
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 
@@ -33,7 +33,9 @@ class TwoTowerModel(BertKerasModel):
         # the first branch operates on the first input
         bert_output = Flatten(name="flatten")(self.bert_layer(input_ids))
         x = Dense(self.dense_size, activation="relu", name="dense1_1")(bert_output)
+        x = Dropout(0.5)(x)
         x = Dense(self.dense_size, activation="relu", name="dense1_2")(x)
+        x = Dropout(0.5)(x)
         x = Model(inputs=input_ids, outputs=x, name="sub_model1")
         # the second branch opreates on the second input
         y = Dense(self.dense_size, activation="relu", name="dense2_1")(input_labels)
@@ -169,12 +171,12 @@ class TwoTowerModel(BertKerasModel):
 #     parser.add_argument('--bert-dir', default='uncased_L-12_H-768_A-12', type=str)
 #     args = parser.parse_args()
 
-#     all_train_ids = np.load('all_train_ids.npy')
-#     all_train_labels = np.load('all_train_labels.npy')
-#     all_train_outputs = np.load('all_train_outputs.npy')
-#     all_test_ids = np.load('all_test_ids.npy')
-#     all_test_labels = np.load('all_test_labels.npy')
-#     all_test_outputs = np.load('all_test_outputs.npy')
+    # all_train_ids = np.load('all_train_ids.npy')
+    # all_train_labels = np.load('all_train_labels.npy')
+    # all_train_outputs = np.load('all_train_outputs.npy')
+    # all_test_ids = np.load('all_test_ids.npy')
+    # all_test_labels = np.load('all_test_labels.npy')
+    # all_test_outputs = np.load('all_test_outputs.npy')
 
 #     num_classes = all_train_labels.shape[1]
 
