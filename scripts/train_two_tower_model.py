@@ -1,7 +1,7 @@
 import time
 import argparse
 import numpy as np
-from two_tower_model import TwoTowerModel
+from smart_news_query_embeddings.models.two_tower_model import TwoTowerModel
 from tensorflow.keras.optimizers import Adam
 
 if __name__ == '__main__':
