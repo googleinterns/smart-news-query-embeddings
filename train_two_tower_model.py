@@ -17,12 +17,12 @@ if __name__ == '__main__':
     parser.add_argument('--bert-dir', default='uncased_L-12_H-768_A-12', type=str)
     args = parser.parse_args()
 
-    all_train_ids = np.load('all_train_ids.npy')
-    all_train_labels = np.load('all_train_labels.npy')
-    all_train_outputs = np.load('all_train_outputs.npy')
-    all_test_ids = np.load('all_test_ids.npy')
-    all_test_labels = np.load('all_test_labels.npy')
-    all_test_outputs = np.load('all_test_outputs.npy')
+    all_train_ids = np.load('data/all_train_ids.npy')
+    all_train_labels = np.load('data/all_train_labels.npy')
+    all_train_outputs = np.load('data/all_train_outputs.npy')
+    all_test_ids = np.load('data/all_test_ids.npy')
+    all_test_labels = np.load('data/all_test_labels.npy')
+    all_test_outputs = np.load('data/all_test_outputs.npy')
 
     num_classes = all_train_labels.shape[1]
 
@@ -30,8 +30,8 @@ if __name__ == '__main__':
 
     model.compile(loss='binary_crossentropy', optimizer=Adam(lr=args.learning_rate), metrics=['accuracy'])
 
-    model.fit(x=(all_train_ids, all_train_labels), y=all_train_outputs,
-    	validation_data=((all_test_ids, all_test_labels), all_test_outputs),
+    model.fit(x=(all_train_ids[:80], all_train_labels[:80]), y=all_train_outputs[:80],
+    	validation_data=((all_test_ids[:20], all_test_labels[:20]), all_test_outputs[:20]),
     	epochs=args.num_train_epochs,
     	batch_size=args.batch_size)
 
