@@ -23,6 +23,11 @@ import bert
 
 from sklearn.model_selection import train_test_split
 
+CATEGORY_THRESHOLD = 20
+RANDOM_SEED = 42
+CLS = '[CLS]'
+SEP = '[SEP]'
+
 def get_filtered_nyt_data(data_path):
 
     """Reads in the NYT article data.
@@ -36,9 +41,9 @@ def get_filtered_nyt_data(data_path):
 
     print('Reading data...')
     df = pd.read_pickle(data_path)
-    sections = df[['section', 'desk']].drop_duplicates()
+    sections = df[['section', 'desk']].drop_duplicates() # desk represents a more specific subcategory of the articles
     category_counts = sections.groupby('section').count().sort_values('desk', ascending=False)
-    big_category_df = category_counts[category_counts['desk'] >= 20]
+    big_category_df = category_counts[category_counts['desk'] >= CATEGORY_THRESHOLD]
 
     big_categories = list(big_category_df.index)
 
@@ -96,14 +101,14 @@ def tokenize_data(inputs, labels, tokenizer, max_seq_length, num_classes):
         train_labels.append(one_hot)
 
     train_tokens = map(tokenizer.tokenize, inputs)
-    train_tokens = map(lambda tok: ["[CLS]"] + tok + ["[SEP]"], train_tokens)
+    train_tokens = map(lambda tok: [CLS] + tok + [SEP], train_tokens)
     train_token_ids = list(map(tokenizer.convert_tokens_to_ids, train_tokens))
 
     train_token_ids = map(
-        lambda tids: tids + [0] * (max_seq_length - len(tids)) if len(tids) <= 128 else tids[:128],
+        lambda tids: tids + [0] * (max_seq_length - len(tids))
+        if len(tids) <= max_seq_length else tids[:max_seq_length],
         train_token_ids)
     train_token_ids = list(train_token_ids)
-    print(type(train_token_ids), type(train_token_ids[0]))
     train_token_ids = np.array(train_token_ids)
 
     train_labels_final = np.array(train_labels)
@@ -111,12 +116,22 @@ def tokenize_data(inputs, labels, tokenizer, max_seq_length, num_classes):
     return train_token_ids, train_labels_final
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data-path', '-d', defualt='nyt_data_from_2015.pkl', type=str)
+
+    args = parser.parse_args()
+
     tokenizer = create_tokenizer('uncased_L-12_H-768_A-12')
 
-    df = get_filtered_nyt_data('nyt_data_from_2015.pkl')
+    df = get_filtered_nyt_data(args.data_path)
     df['category_labels'] = df['section'].astype('category').cat.codes
     print(df.head())
-    train_df, test_df = train_test_split(df, random_state=42)
+    train_df, test_df = train_test_split(df, random_state=RANDOM_SEED)
+    # 'abstract' column has the abstract of an article (input sentence) and 'category_labels'
+    # has a numeric value for the category ID of that article.
     train_ids, train_labels = tokenize_data(train_df['abstract'], train_df['category_labels'], tokenizer)
     test_ids, test_labels = tokenize_data(df['abstract'], train_df['category_labels'], tokenizer)
-    print(train_ids.shape, train_labels.shape, train_ids[0])
+    np.save('data/filtered_train_ids.npy', train_ids)
+    np.save('data/filtered_test_ids.npy', test_ids)
+    np.save('data/filtered_train_labels.npy', train_labels)
+    np.save('data/filtered_test_labels.npy', test_labels)

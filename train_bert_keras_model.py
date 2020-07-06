@@ -48,7 +48,8 @@ if __name__ == '__main__':
     train_ids, train_labels = tokenize_data(train_df['abstract'], train_df['category_labels'], tokenizer, args.max_seq_length, num_classes)
     test_ids, test_labels = tokenize_data(test_df['abstract'], test_df['category_labels'], tokenizer, args.max_seq_length, num_classes)
     model = BertKerasModel(num_classes, bert_dir=args.bert_dir,
-        max_seq_length=args.max_seq_length, dense_size=args.dense_size)
+        max_seq_length=args.max_seq_length, dense_size=args.dense_size,
+        dropout_rate=args.dropout_rate)
     
     model.build(input_shape=(None, args.max_seq_length))
     model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=args.learning_rate), metrics=['accuracy'])

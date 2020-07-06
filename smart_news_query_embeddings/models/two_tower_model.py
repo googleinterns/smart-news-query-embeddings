@@ -28,9 +28,9 @@ class TwoTowerModel(BertKerasModel):
         # the first branch operates on the first input
         bert_output = Flatten(name="flatten")(self.bert_layer(input_ids))
         x = Dense(self.dense_size, activation="relu", name="dense1_1")(bert_output)
-        x = Dropout(0.5)(x)
+        x = Dropout(self.dropout_rate)(x)
         x = Dense(self.dense_size, activation="relu", name="dense1_2")(x)
-        x = Dropout(0.5)(x)
+        x = Dropout(self.dropout_rate)(x)
         x = Model(inputs=input_ids, outputs=x, name="sub_model1")
         # the second branch opreates on the second input
         y = Dense(self.dense_size, activation="relu", name="dense2_1")(input_labels)

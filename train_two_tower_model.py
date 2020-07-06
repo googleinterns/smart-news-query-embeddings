@@ -27,7 +27,8 @@ if __name__ == '__main__':
 
     num_classes = all_train_labels.shape[1]
 
-    model = TwoTowerModel(num_classes, bert_dir=args.bert_dir, max_seq_length=args.max_seq_length, dense_size=args.dense_size)
+    model = TwoTowerModel(num_classes, bert_dir=args.bert_dir,
+        max_seq_length=args.max_seq_length, dense_size=args.dense_size, dropout_rate=args.dropout_rate)
 
     model.compile(loss='binary_crossentropy', optimizer=Adam(lr=args.learning_rate), metrics=['accuracy'])
 
