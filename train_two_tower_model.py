@@ -1,3 +1,4 @@
+import os
 import time
 import argparse
 import numpy as np
@@ -30,9 +31,12 @@ if __name__ == '__main__':
 
     model.compile(loss='binary_crossentropy', optimizer=Adam(lr=args.learning_rate), metrics=['accuracy'])
 
-    model.fit(x=(all_train_ids[:80], all_train_labels[:80]), y=all_train_outputs[:80],
-    	validation_data=((all_test_ids[:20], all_test_labels[:20]), all_test_outputs[:20]),
+    model.fit(x=(all_train_ids, all_train_labels), y=all_train_outputs,
+    	validation_data=((all_test_ids, all_test_labels), all_test_outputs),
     	epochs=args.num_train_epochs,
     	batch_size=args.batch_size)
 
-    model.save(args.output_dir)
+    if not os.path.exists('outputs'):
+        os.mkdir('outputs')
+    out_dir = os.path.join('outputs', args.output_dir)
+    model.save(out_dir)

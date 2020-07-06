@@ -14,12 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
+import time
+import argparse
 from smart_news_query_embeddings.models.bert_keras_model import BertKerasModel
 from smart_news_query_embeddings.preprocessing.bert_tokenizer import *
 from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
-import time
-import argparse
 
 if __name__ == '__main__':
 
@@ -53,4 +54,7 @@ if __name__ == '__main__':
     model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=args.learning_rate), metrics=['accuracy'])
     model.fit(train_ids, train_labels, validation_data=(test_ids, test_labels), epochs=args.num_train_epochs, batch_size=args.batch_size)
 
-    model.save(args.output_dir)
+    if not os.path.exists('outputs'):
+        os.mkdir('outputs')
+    out_dir = os.path.join('outputs', args.output_dir)
+    model.save(out_dir)
