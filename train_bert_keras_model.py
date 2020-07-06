@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     tokenizer = create_tokenizer(args.bert_dir)
 
-    df = get_filtered_nyt_data_with_scores('data/nyt_articles_with_normalized_scores.pkl').sample(100)
+    df = get_filtered_nyt_data_with_scores('data/nyt_articles_with_normalized_scores.pkl')
     df['category_labels'] = df['section'].astype('category').cat.codes
     num_classes = df['category_labels'].max() + 1
     train_df, test_df = train_test_split(df, random_state=42)
