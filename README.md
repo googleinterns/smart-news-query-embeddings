@@ -16,4 +16,4 @@ pip install -r requirements_keras.txt
 
 # Running the Code
 
-We use [this library](https://pypi.org/project/bert-for-tf2/) to instantiate a BERT layer that can be used in Keras models with TF 2.2. To learn how to run prediction on saved models or train new ones, run `python train_bert_keras_model --help` for more information on the exact configurations you can pass in. The script currently uses news article data which is available from the [New York Times API](https://developer.nytimes.com/).
+We use [this library](https://pypi.org/project/bert-for-tf2/) to instantiate a BERT layer that can be used in Keras models with TF 2.2. To learn how to run prediction on saved models or train new ones, run `python train_bert_keras_model.py --help` for more information on the exact configurations you can pass in. The script currently uses news article data which is available from the [New York Times API](https://developer.nytimes.com/).
