@@ -22,6 +22,8 @@ from smart_news_query_embeddings.preprocessing.bert_tokenizer import *
 from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 
+DATA_PATH = 'data/nyt_articles_with_normalized_scores.pkl'
+
 if __name__ == '__main__':
 
     output_dir = 'bert_keras_output_{}'.format(int(time.time()))
@@ -41,7 +43,7 @@ if __name__ == '__main__':
 
     tokenizer = create_tokenizer(args.bert_dir)
 
-    df = get_filtered_nyt_data_with_scores('data/nyt_articles_with_normalized_scores.pkl')
+    df = get_filtered_nyt_data_with_scores(DATA_PATH)
     df['category_labels'] = df['section'].astype('category').cat.codes
     num_classes = df['category_labels'].max() + 1
     train_df, test_df = train_test_split(df, random_state=42)

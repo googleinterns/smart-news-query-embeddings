@@ -123,6 +123,9 @@ if __name__ == '__main__':
 
     tokenizer = create_tokenizer('uncased_L-12_H-768_A-12')
 
+    # Read data in from pickled NYT articles and filter by articles with categories that
+    # only have 20 or more subcategories. This narrows down the number of classes in the classification problem
+    # which improves accuracy.
     df = get_filtered_nyt_data(args.data_path)
     df['category_labels'] = df['section'].astype('category').cat.codes
     print(df.head())
