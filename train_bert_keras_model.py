@@ -40,24 +40,28 @@ if __name__ == '__main__':
     parser.add_argument('--training', '-t', default=True, type=bool)
     parser.add_argument('--bert-dir', default='uncased_L-12_H-768_A-12', type=str)
     args = parser.parse_args()
+    if not os.path.exists('outputs'):
+        os.mkdir('outputs')
+    out_dir = os.path.join('outputs', args.output_dir)
 
     tokenizer = create_tokenizer(args.bert_dir)
 
     df = get_filtered_nyt_data_with_scores(DATA_PATH)
     df['category_labels'] = df['section'].astype('category').cat.codes
     num_classes = df['category_labels'].max() + 1
-    train_df, test_df = train_test_split(df, random_state=42)
+    CUTOFF = df.shape[0] // 2
+    train_df, test_df = df[CUTOFF:], df[:CUTOFF]
     train_ids, train_labels = tokenize_data(train_df['abstract'], train_df['category_labels'], tokenizer, args.max_seq_length, num_classes)
     test_ids, test_labels = tokenize_data(test_df['abstract'], test_df['category_labels'], tokenizer, args.max_seq_length, num_classes)
-    model = BertKerasModel(num_classes, bert_dir=args.bert_dir,
-        max_seq_length=args.max_seq_length, dense_size=args.dense_size,
-        dropout_rate=args.dropout_rate)
+    if not os.path.exists(out_dir):
+        model = BertKerasModel(num_classes, bert_dir=args.bert_dir,
+            max_seq_length=args.max_seq_length, dense_size=args.dense_size,
+            dropout_rate=args.dropout_rate)
+        model.build(input_shape=(None, args.max_seq_length))
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=args.learning_rate), metrics=['accuracy'])
+    else:
+        model = tf.keras.models.load_model(out_dir)
     
-    model.build(input_shape=(None, args.max_seq_length))
-    model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=args.learning_rate), metrics=['accuracy'])
     model.fit(train_ids, train_labels, validation_data=(test_ids, test_labels), epochs=args.num_train_epochs, batch_size=args.batch_size)
 
-    if not os.path.exists('outputs'):
-        os.mkdir('outputs')
-    out_dir = os.path.join('outputs', args.output_dir)
     model.save(out_dir)
