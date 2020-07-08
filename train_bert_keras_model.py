@@ -17,6 +17,7 @@ limitations under the License.
 import os
 import time
 import argparse
+import tensorflow as tf
 from smart_news_query_embeddings.models.bert_keras_model import BertKerasModel
 from smart_news_query_embeddings.preprocessing.bert_tokenizer import *
 from tensorflow.keras.optimizers import Adam
