@@ -18,12 +18,12 @@ if __name__ == '__main__':
     parser.add_argument('--bert-dir', default='uncased_L-12_H-768_A-12', type=str)
     args = parser.parse_args()
 
-    all_train_ids = np.load('data/all_train_ids.npy')
-    all_train_labels = np.load('data/all_train_labels.npy')
-    all_train_outputs = np.load('data/all_train_outputs.npy')
-    all_test_ids = np.load('data/all_test_ids.npy')
-    all_test_labels = np.load('data/all_test_labels.npy')
-    all_test_outputs = np.load('data/all_test_outputs.npy')
+    all_train_ids = np.load('data/all_train_ids2.npy')
+    all_train_labels = np.load('data/all_train_labels2.npy')
+    all_train_outputs = np.load('data/all_train_outputs2.npy')
+    all_test_ids = np.load('data/all_test_ids2.npy')
+    all_test_labels = np.load('data/all_test_labels2.npy')
+    all_test_outputs = np.load('data/all_test_outputs2.npy')
 
     num_classes = all_train_labels.shape[1]
 

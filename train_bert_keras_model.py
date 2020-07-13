@@ -24,6 +24,7 @@ from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 
 DATA_PATH = 'data/nyt_articles_with_normalized_scores.pkl'
+RANDOM_SEED = 42
 
 if __name__ == '__main__':
 
@@ -52,9 +53,9 @@ if __name__ == '__main__':
     df['category_labels'] = df['section'].astype('category').cat.codes
     num_classes = df['category_labels'].max() + 1
     CUTOFF = int(df.shape[0] * args.tail_cutoff)
-    train_df, test_df = df[-CUTOFF:], df[:CUTOFF]
-    train_ids, train_labels = tokenize_data(train_df['abstract'], train_df['category_labels'], tokenizer, args.max_seq_length, num_classes)
-    test_ids, test_labels = tokenize_data(test_df['abstract'], test_df['category_labels'], tokenizer, args.max_seq_length, num_classes)
+    train_df, test_df = train_test_split(df, random_state=RANDOM_SEED)
+    train_ids, train_labels = tokenize_data(train_df['fixed_abstract'], train_df['category_labels'], tokenizer, args.max_seq_length, num_classes)
+    test_ids, test_labels = tokenize_data(test_df['fixed_abstract'], test_df['category_labels'], tokenizer, args.max_seq_length, num_classes)
     if not os.path.exists(out_dir):
         model = BertKerasModel(num_classes, bert_dir=args.bert_dir,
             max_seq_length=args.max_seq_length, dense_size=args.dense_size,
@@ -63,6 +64,8 @@ if __name__ == '__main__':
         model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=args.learning_rate), metrics=['accuracy'])
     else:
         model = tf.keras.models.load_model(out_dir)
+
+    print(model.summary())
     
     model.fit(train_ids, train_labels, validation_data=(test_ids, test_labels), epochs=args.num_train_epochs, batch_size=args.batch_size)
 
