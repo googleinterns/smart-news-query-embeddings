@@ -22,29 +22,59 @@ from tensorflow.keras.optimizers import Adam
 class TwoTowerModel(BertKerasModel):
 
     def build_model(self):
+        self.flatten = Flatten(name="flatten")
+        self.dense1_1 = Dense(self.dense_size, activation="relu", name="dense1_1")
+        self.dropout1 = Dropout(self.dropout_rate)
+        self.dense1_2 = Dense(self.dense_size, activation="relu", name="dense1_2")
+        self.dropout2 = Dropout(self.dropout_rate)
+
+        self.dense2_1 = Dense(self.dense_size, activation="relu", name="dense2_1")
+        self.dense2_2 = Dense(self.dense_size, activation="relu", name="dense2_2")
+
+        self.fc_layer = Dense(128, activation="relu", name="final_dense")
+        self.output_layer = Dense(2, activation="sigmoid", name="output_dense")
+        self.pre_embedding_layers = [self.bert_layer, self.flatten, self.dense1_1, self.dropout1]
         # define two sets of inputs
-        input_ids = Input(shape=(self.max_seq_length,), dtype='int32', name="input_ids")
-        input_labels = Input(shape=(self.num_classes,), dtype='int32', name="input_labels")
-        # the first branch operates on the first input
-        bert_output = Flatten(name="flatten")(self.bert_layer(input_ids))
-        x = Dense(self.dense_size, activation="relu", name="dense1_1")(bert_output)
-        x = Dropout(self.dropout_rate)(x)
-        x = Dense(self.dense_size, activation="relu", name="dense1_2")(x)
-        x = Dropout(self.dropout_rate)(x)
-        x = Model(inputs=input_ids, outputs=x, name="sub_model1")
-        # the second branch opreates on the second input
-        y = Dense(self.dense_size, activation="relu", name="dense2_1")(input_labels)
-        y = Dense(self.dense_size, activation="relu", name="dense2_2")(y)
-        y = Model(inputs=input_labels, outputs=y, name="sub_model2")
-        # combine the output of the two branches
-        combined = concatenate([x.output, y.output], name="concantenate")
-        # apply a FC layer and then a classification prediction on the
-        # combined outputs
-        z = Dense(128, activation="relu", name="final_dense")(combined)
-        z = Dense(2, activation="sigmoid", name="output_dense")(z)
-        # our model will accept the inputs of the two branches and
-        # then output a single value
-        self.output_layer = Model(inputs=[x.input, y.input], outputs=z, name="two_tower_model")
+        # input_ids = Input(shape=(self.max_seq_length,), dtype='int32', name="input_ids")
+        # input_labels = Input(shape=(self.num_classes,), dtype='int32', name="input_labels")
+        # # the first branch operates on the first input
+        # bert_output = Flatten(name="flatten")(self.bert_layer(input_ids))
+        # x = Dense(self.dense_size, activation="relu", name="dense1_1")(bert_output)
+        # x = Dropout(self.dropout_rate)(x)
+        # x = Dense(self.dense_size, activation="relu", name="dense1_2")(x)
+        # x = Dropout(self.dropout_rate)(x)
+        # x = Model(inputs=input_ids, outputs=x, name="sub_model1")
+        # # the second branch opreates on the second input
+        # y = Dense(self.dense_size, activation="relu", name="dense2_1")(input_labels)
+        # y = Dense(self.dense_size, activation="relu", name="dense2_2")(y)
+        # y = Model(inputs=input_labels, outputs=y, name="sub_model2")
+        # # combine the output of the two branches
+        # combined = concatenate([x.output, y.output], name="concantenate")
+        # # apply a FC layer and then a classification prediction on the
+        # # combined outputs
+        # z = Dense(128, activation="relu", name="final_dense")(combined)
+        # z = Dense(2, activation="sigmoid", name="output_dense")(z)
+        # # our model will accept the inputs of the two branches and
+        # # then output a single value
+        # self.output_layer = Model(inputs=[x.input, y.input], outputs=z, name="two_tower_model")
+
+    @property
+    def dense_embedding_weights(self):
+        W, b = self.dense2_2.weights
+        return W.numpy(), b.numpy()
 
     def call(self, inputs):
-        return self.output_layer(inputs)
+        input_ids, input_labels = inputs
+        out1 = self.bert_layer(input_ids)
+        out1 = self.flatten(out1)
+        out1 = self.dense1_1(out1)
+        out1 = self.dropout1(out1)
+        out1 = self.dense1_2(out1)
+        out1 = self.dropout2(out1)
+        out1 = self.dense2_2(out1)
+        out2 = self.dense2_1(input_labels)
+        out2 = self.dense2_2(out2)
+        out = concatenate([out1, out2])
+        out = self.fc_layer(out)
+        out = self.output_layer(out)
+        return out
