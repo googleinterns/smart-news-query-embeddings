@@ -35,6 +35,7 @@ class TwoTowerModel(BertKerasModel):
         self.fc_layer = Dense(128, activation="relu", name="final_dense")
         self.output_layer = Dense(2, activation="sigmoid", name="output_dense")
         self.pre_embedding_layers = [self.bert_layer, self.bn, self.flatten, self.dense1_1, self.dropout1]
+        self.dense_embedding = self.dense1_2
         # define two sets of inputs
         # input_ids = Input(shape=(self.max_seq_length,), dtype='int32', name="input_ids")
         # input_labels = Input(shape=(self.num_classes,), dtype='int32', name="input_labels")
