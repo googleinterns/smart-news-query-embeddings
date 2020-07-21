@@ -24,9 +24,9 @@ class BertKerasModel(tf.keras.models.Model):
         self.dense_layers = []
         for _ in range(self.num_dense_layers):
             self.dense_layers.append(tf.keras.layers.Dense(self.dense_size))
+            self.dense_layers.append(tf.keras.layers.LeakyReLU())
             self.dense_layers.append(tf.keras.layers.Dropout(self.dropout_rate))
-        self.pre_embedding_layers = [self.bert_layer, self.flatten] + self.dense_layers[:-1]
-        self.dense_embedding = self.dense_layers[-1]
+        self.embedding_layers = [self.bert_layer, self.flatten] + self.dense_layers[:-2]
         self.output_layer = tf.keras.layers.Dense(self.num_classes, activation=tf.nn.softmax)
 
     def _create_bert_layer(self):
@@ -42,8 +42,6 @@ class BertKerasModel(tf.keras.models.Model):
         out = self.flatten(out)
         for layer in self.dense_layers:
             out = layer(out)
-            out = tf.nn.relu(out)
-        out = self.dropout(out)
         out = self.output_layer(out)
         return out
 
