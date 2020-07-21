@@ -45,5 +45,9 @@ class BertKerasModel(tf.keras.models.Model):
         out = self.output_layer(out)
         return out
 
-    def get_embedding(self, inputs):
-        return self.bert_layer(inputs)
+    @tf.function
+    def get_embedding(self, x):
+        out = x
+        for layer in self.embedding_layers:
+            out = layer(out)
+        return out

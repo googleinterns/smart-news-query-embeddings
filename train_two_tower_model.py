@@ -30,7 +30,13 @@ if __name__ == '__main__':
     model = TwoTowerModel(num_classes, bert_dir=args.bert_dir,
         max_seq_length=args.max_seq_length, dense_size=args.dense_size, dropout_rate=args.dropout_rate)
 
+    model.build(input_shape=[(None, 128), (None, 64)])
     model.compile(loss='binary_crossentropy', optimizer=Adam(lr=args.learning_rate), metrics=['accuracy'])
+    print(model.summary())
+    if not os.path.exists('output_data'):
+        os.mkdir('output_data')
+    train_data_path = os.path.join('output_data', args.output_dir, 'train_data.npy')
+    valid_data_path = os.path.join('output_data', args.output_dir, 'vaild_data.npy')
 
     model.fit(x=(all_train_ids, all_train_labels), y=all_train_outputs,
     	validation_data=((all_test_ids, all_test_labels), all_test_outputs),
