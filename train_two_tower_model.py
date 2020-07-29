@@ -24,10 +24,10 @@ if __name__ == '__main__':
     exp_data_path = os.path.join('output_data', args.exp_name)
     if not os.path.exists(exp_data_path):
         os.mkdir(exp_data_path)
-    train_data_path = os.path.join(exp_data_path, 'train_data.npy')
-    train_labels_path = os.path.join(exp_data_path, 'train_labels.npy')
-    valid_data_path = os.path.join(exp_data_path, 'valid_data.npy')
-    valid_labels_path = os.path.join(exp_data_path, 'valid_labels.npy')
+    train_data_path = os.path.join(exp_data_path, 'train_data.pkl')
+    train_labels_path = os.path.join(exp_data_path, 'train_labels.pkl')
+    valid_data_path = os.path.join(exp_data_path, 'valid_data.pkl')
+    valid_labels_path = os.path.join(exp_data_path, 'valid_labels.pkl')
     if not os.path.exists('output_models'):
         os.mkdir('output_models')
     out_dir = os.path.join('output_models', args.exp_name)
@@ -45,23 +45,18 @@ if __name__ == '__main__':
         with open(valid_data_path, 'rb') as f:
             (all_valid_ids, all_valid_labels) = pickle.load(f)
         with open(train_labels_path, 'rb') as f:
-            all_train_labels = pickle.load(f)
+            all_train_outputs = pickle.load(f)
         with open(valid_labels_path, 'rb') as f:
-            all_valid_labels = pickle.load(f)
+            all_valid_outputs = pickle.load(f)
 
     with open(train_data_path, 'wb') as f:
         pickle.dump((all_train_ids, all_train_labels), f)
     with open(valid_data_path, 'wb') as f:
         pickle.dump((all_valid_ids, all_valid_labels), f)
     with open(train_labels_path, 'wb') as f:
-        pickle.dump(all_train_labels, f)
+        pickle.dump(all_train_outputs, f)
     with open(valid_labels_path, 'wb') as f:
-        pickle.dump(all_valid_labels, f)
-    # np.save(train_labels_path, all_train_labels)
-    # np.save(train_outputs_path, all_train_outputs)
-    # np.save(valid_ids_path, (all_valid_ids, all_valid_labels))
-    # np.save(valid_labels_path, all_valid_labels)
-    # np.save(valid_outputs_path, all_valid_outputs)
+        pickle.dump(all_valid_outputs, f)
 
     num_classes = all_train_labels.shape[1]
 
@@ -75,8 +70,8 @@ if __name__ == '__main__':
         model = tf.keras.models.load_model(out_dir)
     print(model.summary())
 
-    model.fit(x=(all_train_ids[:80], all_train_labels[:80]), y=all_train_outputs[:80],
-    	validation_data=((all_valid_ids[:20], all_valid_labels[:20]), all_valid_outputs[:20]),
+    model.fit(x=(all_train_ids, all_train_labels), y=all_train_outputs,
+    	validation_data=((all_valid_ids, all_valid_labels), all_valid_outputs),
     	epochs=args.num_train_epochs,
     	batch_size=args.batch_size)
 
