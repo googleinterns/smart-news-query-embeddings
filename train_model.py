@@ -27,7 +27,9 @@ from smart_news_query_embeddings.models.bert_keras_model import BertKerasModel
 from smart_news_query_embeddings.preprocessing.bert_tokenizer import *
 from tensorflow.keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
+from bert_model_trainer import BertModelTrainer
 from two_tower_model_trainer import TwoTowerModelTrainer
+from bert_model_specificity_score_trainer import BertModelSpecificityScoreTrainer
 
 if __name__ == '__main__':
 
@@ -41,8 +43,22 @@ if __name__ == '__main__':
     parser.add_argument('--dense-size', '-d', default=256, type=int)
     parser.add_argument('--exp-name', '-e', default=output_dir, type=str)
     parser.add_argument('--bert-dir', default='uncased_L-12_H-768_A-12', type=str)
+    parser.add_argument('--two-tower', '-t', action='store_true', default=False)
+    parser.add_argument('--specificity-scores', '-s', action='store_true', default=False)
+    parser.add_argument('--cutoff', '-c', default=0.5, type=float)
+    parser.add_argument('--train-tail', action='store_true', default=False)
     args = parser.parse_args()
-    trainer = TwoTowerModelTrainer(args.exp_name, batch_size=args.batch_size, learning_rate=args.learning_rate,
+    model_class = BertModelTrainer
+    if args.two_tower:
+        trainer = TwoTowerModelTrainer(args.exp_name, batch_size=args.batch_size, learning_rate=args.learning_rate,
+        max_seq_length=args.max_seq_length, dropout_rate=args.dropout_rate, epochs=args.num_train_epochs,
+        dense_size=args.dense_size, bert_dir=args.bert_dir)
+    elif args.specificity_scores:
+        trainer = BertModelSpecificityScoreTrainer(args.exp_name, batch_size=args.batch_size, learning_rate=args.learning_rate,
+        max_seq_length=args.max_seq_length, dropout_rate=args.dropout_rate, epochs=args.num_train_epochs,
+        dense_size=args.dense_size, bert_dir=args.bert_dir, tail_cutoff=args.cutoff, train_tail=args.train_tail)
+    else:
+        trainer = BertModelTrainer(args.exp_name, batch_size=args.batch_size, learning_rate=args.learning_rate,
         max_seq_length=args.max_seq_length, dropout_rate=args.dropout_rate, epochs=args.num_train_epochs,
         dense_size=args.dense_size, bert_dir=args.bert_dir)
     # trainer.train()
