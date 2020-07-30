@@ -101,7 +101,7 @@ class BertModelTrainer():
         df = get_filtered_nyt_data_with_scores(self.DATA_PATH)
         df['category_labels'] = df['section'].astype('category').cat.codes
         self.num_classes = df['category_labels'].max() + 1
-        train_df, test_df = train_test_split(df, random_state=self.RANDOM_SEED)
+        train_df, test_df = self.get_train_and_valid_split(df)
         train_sentences, train_categories = train_df['fixed_headline'], train_df['section']
         test_sentences, test_categories = test_df['fixed_headline'], test_df['section']
         train_sentences.to_pickle(self.train_sentences_path)
@@ -150,7 +150,7 @@ class BertModelTrainer():
     def get_embeddings(self, data):
         batch_size = 128
         N = data.shape[0]
-        embeddings = np.zeros((N, self.model.dense_size))
+        embeddings = np.zeros((N, self.dense_size))
         for i in tqdm(range(0, N, batch_size)):
             x = data[i:i + batch_size]
             embeddings[i:i + batch_size] = self.model.get_embedding(x).numpy()

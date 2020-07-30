@@ -9,9 +9,9 @@ class TwoTowerModelTrainer(BertModelTrainer):
         self.train_ids = np.load('data/all_train_ids.npy')
         self.train_labels = np.load('data/all_train_labels.npy')
         self.train_outputs = np.load('data/all_train_outputs.npy')
-        self.valid_ids = np.load('data/all_test_ids.npy')
-        self.valid_labels = np.load('data/all_test_labels.npy')
-        self.valid_outputs = np.load('data/all_test_outputs.npy')
+        self.test_ids = np.load('data/all_test_ids.npy')
+        self.test_labels = np.load('data/all_test_labels.npy')
+        self.test_outputs = np.load('data/all_test_outputs.npy')
         self.num_classes = self.train_labels.shape[1]
 
     @property
@@ -24,11 +24,11 @@ class TwoTowerModelTrainer(BertModelTrainer):
 
     @property
     def valid_x(self):
-        return (self.valid_ids, self.valid_labels)
+        return (self.test_ids, self.test_labels)
 
     @property
     def valid_y(self):
-        return self.valid_outputs
+        return self.test_outputs
 
     def get_model(self):
         self.model = TwoTowerModel(self.num_classes, bert_dir=self.bert_dir,

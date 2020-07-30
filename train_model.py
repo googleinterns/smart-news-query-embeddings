@@ -61,4 +61,5 @@ if __name__ == '__main__':
         trainer = BertModelTrainer(args.exp_name, batch_size=args.batch_size, learning_rate=args.learning_rate,
         max_seq_length=args.max_seq_length, dropout_rate=args.dropout_rate, epochs=args.num_train_epochs,
         dense_size=args.dense_size, bert_dir=args.bert_dir)
-    # trainer.train()
+    print('Trainer class is: {}'.format(type(trainer)))
+    trainer.train()
