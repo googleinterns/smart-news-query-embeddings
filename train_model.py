@@ -14,26 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-import sys
-import time
 import argparse
-import pickle
-import json
-import numpy as np
-import tensorflow as tf
-from tqdm import tqdm
-from smart_news_query_embeddings.models.bert_keras_model import BertKerasModel
-from smart_news_query_embeddings.preprocessing.bert_tokenizer import *
-from tensorflow.keras.optimizers import Adam
-from sklearn.model_selection import train_test_split
+import time
 from bert_model_trainer import BertModelTrainer
 from two_tower_model_trainer import TwoTowerModelTrainer
 from bert_model_specificity_score_trainer import BertModelSpecificityScoreTrainer
 
 if __name__ == '__main__':
 
-    output_dir = 'bert_keras_output_{}'.format(int(time.time()))
+    OUTPUT_DIR = 'bert_keras_output_{}'.format(int(time.time()))
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch-size', '-b', default=32, type=int)
     parser.add_argument('--learning-rate', '-l', default=1e-5, type=float)
@@ -41,7 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--dropout-rate', default=0.5, type=float)
     parser.add_argument('--num-train-epochs', '-n', default=3, type=int)
     parser.add_argument('--dense-size', '-d', default=256, type=int)
-    parser.add_argument('--exp-name', '-e', default=output_dir, type=str)
+    parser.add_argument('--exp-name', '-e', default=OUTPUT_DIR, type=str)
     parser.add_argument('--bert-dir', default='uncased_L-12_H-768_A-12', type=str)
     parser.add_argument('--two-tower', '-t', action='store_true', default=False)
     parser.add_argument('--specificity-scores', '-s', action='store_true', default=False)
