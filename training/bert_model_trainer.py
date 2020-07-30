@@ -98,7 +98,7 @@ class BertModelTrainer():
     def get_data(self):
         self.tokenizer = create_tokenizer(self.bert_dir)
 
-        df = get_filtered_nyt_data_with_scores(self.DATA_PATH)
+        df = get_filtered_nyt_data_with_scores(self.DATA_PATH).sample(100)
         df['category_labels'] = df['section'].astype('category').cat.codes
         self.num_classes = df['category_labels'].max() + 1
         train_df, test_df = self.get_train_and_valid_split(df)
