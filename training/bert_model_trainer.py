@@ -1,3 +1,19 @@
+"""
+Copyright 2020 Google LLC.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import os
 import pickle
 import json
@@ -7,7 +23,29 @@ from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.optimizers import Adam
 from smart_news_query_embeddings.models.bert_keras_model import BertKerasModel
-from smart_news_query_embeddings.preprocessing.bert_tokenizer import *
+from smart_news_query_embeddings.preprocessing.bert_tokenizer import \
+create_tokenizer, get_filtered_nyt_data_with_scores, tokenize_data
+
+"""
+This class defines the trainer for the baseline model. It also provides an API for any
+other models to be trained. The methods that would need to be overridden in a subclass
+are the following:
+
+get_data(self)
+get_model(self)
+get_train_and_valid_split(self, df)
+
+It may additionally need to override the following properties:
+
+train_x(self)
+train_y(self)
+valid_x(self)
+valid_y(self)
+
+Those are the methods and attributes that differ between
+the models that we have implemented, and are appropriately subclassed
+in bert_model_specificity_score_trainer.py and two_tower_model_trainer.py.
+"""
 
 class BertModelTrainer():
 
@@ -66,12 +104,15 @@ class BertModelTrainer():
     def valid_y(self):
         return self.test_labels
     
+    # Checks cache for pre-existing model, or instantiates a new one.
     def _load_model(self):
         if os.path.exists(self.out_dir):
             self.model = tf.keras.models.load_model(self.out_dir)
         else:
             self.get_model()
 
+    # Instantiates a new model with all the hyperparameters provided
+    # to this class.
     def get_model(self):
         self.model = BertKerasModel(self.num_classes, bert_dir=self.bert_dir,
             max_seq_length=self.max_seq_length, dense_size=self.dense_size,
@@ -80,7 +121,7 @@ class BertModelTrainer():
         self.model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=self.learning_rate),
             metrics=['accuracy'])
 
-
+    # Reads cached data. To avoid re-tokenization, which takes a lot of time.
     def _get_data_from_cache(self):
         with open(self.train_data_path, 'rb') as f:
             self.train_ids = pickle.load(f)
@@ -92,9 +133,23 @@ class BertModelTrainer():
             self.test_labels = pickle.load(f)
         self.num_classes = self.train_labels.shape[1]
 
+    """
+    How to split the data into training and validation sets.
+    This varies between experiments so it may be necessary to
+    override this functionality in subclasses.
+    """
     def get_train_and_valid_split(self, df):
         return train_test_split(df, random_state=self.RANDOM_SEED)
 
+    """
+    Function to retrieve training and validation data, as well as parse it.
+    This function is responsible for setting the following attributes:
+
+    self.num_classes, self.train_ids, self.train_labels,
+    self.valid_ids, self.valid_labels
+
+    Any subclass must also define those 5 attributes in get_data if overridden.
+    """
     def get_data(self):
         self.tokenizer = create_tokenizer(self.bert_dir)
 
@@ -135,6 +190,11 @@ class BertModelTrainer():
 
         self.model.save(self.out_dir)
 
+    """
+    Generate embeddings from the trained model. First generates embeddings for
+    training data, then for validation data. Saves them within the experiment
+    directory for later use.
+    """
     def save_embeddings(self):
         if not os.path.exists(self.embeddings_dir):
             os.mkdir(self.embeddings_dir)
@@ -147,11 +207,15 @@ class BertModelTrainer():
         test_embeddings_path = os.path.join(self.embeddings_dir, 'valid_embeddings.npy')
         np.save(test_embeddings_path, test_embeddings)
 
+    """
+    Computes embeddings using the trained model. Batch size of 128 is enough to ensure
+    no out-of-memory issues on GCP. For ~60k examples, this takes about 2-3 minutes to run.
+    """
     def get_embeddings(self, data):
         batch_size = 128
         N = data.shape[0]
         embeddings = np.zeros((N, self.dense_size))
-        for i in tqdm(range(0, N, batch_size)):
+        for i in tqdm(range(0, N, batch_size)): # tqdm shows a progress bar while this runs
             x = data[i:i + batch_size]
             embeddings[i:i + batch_size] = self.model.get_embedding(x).numpy()
         return embeddings

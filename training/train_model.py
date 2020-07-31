@@ -20,6 +20,10 @@ from bert_model_trainer import BertModelTrainer
 from two_tower_model_trainer import TwoTowerModelTrainer
 from bert_model_specificity_score_trainer import BertModelSpecificityScoreTrainer
 
+"""
+Script that instantiates a trainer and trains the model.
+"""
+
 if __name__ == '__main__':
 
     OUTPUT_DIR = 'bert_keras_output_{}'.format(int(time.time()))
@@ -37,7 +41,6 @@ if __name__ == '__main__':
     parser.add_argument('--cutoff', '-c', default=0.5, type=float)
     parser.add_argument('--train-tail', action='store_true', default=False)
     args = parser.parse_args()
-    model_class = BertModelTrainer
     if args.two_tower:
         trainer = TwoTowerModelTrainer(args.exp_name, batch_size=args.batch_size, learning_rate=args.learning_rate,
         max_seq_length=args.max_seq_length, dropout_rate=args.dropout_rate, epochs=args.num_train_epochs,
