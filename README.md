@@ -11,7 +11,7 @@ You will need Python 3.8 or higher to run this project. From the command line, r
 ```
 python3.8 -m venv bert_env
 source bert_env/bin/activate
-pip install -r config/requirements_keras.txt
+python setup.py install
 ```
 
 # Running the Code
