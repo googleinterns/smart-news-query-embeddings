@@ -51,6 +51,9 @@ class BertModelTrainer():
 
     DATA_PATH = 'data/nyt_articles_with_normalized_scores.pkl'
     RANDOM_SEED = 42
+    INPUT_COLUMN = 'fixed_abstract'
+    OUTPUT_COLUMN = 'section'
+    BATCH_SIZE = 128
 
     def __init__(self, exp_name, max_seq_length=128, bert_dir='uncased_L-12_H-768_A-12',
         dense_size=256, learning_rate=1e-5, dropout_rate=0.5, epochs=3, batch_size=32):
@@ -154,11 +157,11 @@ class BertModelTrainer():
         self.tokenizer = create_tokenizer(self.bert_dir)
 
         df = get_filtered_nyt_data_with_scores(self.DATA_PATH)
-        df['category_labels'] = df['section'].astype('category').cat.codes
+        df['category_labels'] = df[self.OUTPUT_COLUMN].astype('category').cat.codes
         self.num_classes = df['category_labels'].max() + 1
         train_df, test_df = self.get_train_and_valid_split(df)
-        train_sentences, train_categories = train_df['fixed_headline'], train_df['section']
-        test_sentences, test_categories = test_df['fixed_headline'], test_df['section']
+        train_sentences, train_categories = train_df[self.INPUT_COLUMN], train_df[self.OUTPUT_COLUMN]
+        test_sentences, test_categories = test_df[self.INPUT_COLUMN], test_df[self.OUTPUT_COLUMN]
         train_sentences.to_pickle(self.train_sentences_path)
         test_sentences.to_pickle(self.test_sentences_path)
         train_categories.to_pickle(self.train_categories_path)
@@ -212,10 +215,9 @@ class BertModelTrainer():
     no out-of-memory issues on GCP. For ~60k examples, this takes about 2-3 minutes to run.
     """
     def get_embeddings(self, data):
-        batch_size = 128
         N = data.shape[0]
         embeddings = np.zeros((N, self.dense_size))
-        for i in tqdm(range(0, N, batch_size)): # tqdm shows a progress bar while this runs
-            x = data[i:i + batch_size]
-            embeddings[i:i + batch_size] = self.model.get_embedding(x).numpy()
+        for i in tqdm(range(0, N, self.BATCH_SIZE)): # tqdm shows a progress bar while this runs
+            x = data[i:i + self.BATCH_SIZE]
+            embeddings[i:i + self.BATCH_SIZE] = self.model.get_embedding(x).numpy()
         return embeddings
