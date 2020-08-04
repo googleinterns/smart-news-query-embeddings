@@ -9,7 +9,7 @@ create_tokenizer, tokenize_data
 home = os.path.expanduser('~')
 bert_dir = os.path.join(home, 'smart-news-query-embeddings/uncased_L-12_H-768_A-12/')
 tokenizer = create_tokenizer(bert_dir)
-exp_dir = os.path.join(home, 'smart-news-query-embeddings/experiments', 'test_setup', 'model')
+exp_dir = os.path.join(home, 'smart-news-query-embeddings/experiments', 'baseline_model', 'model')
 keras_model = tf.keras.models.load_model(exp_dir)
 
 class PredictHandler(RequestHandler):    
