@@ -20,6 +20,7 @@ import random
 import numpy as np
 import pandas as pd
 import bert
+from tqdm import tqdm
 
 from sklearn.model_selection import train_test_split
 
@@ -100,15 +101,14 @@ def tokenize_data(inputs, labels, tokenizer, max_seq_length, num_classes):
         one_hot[l] = 1
         train_labels.append(one_hot)
 
-    train_tokens = map(tokenizer.tokenize, inputs)
-    train_tokens = map(lambda tok: [CLS] + tok + [SEP], train_tokens)
-    train_token_ids = list(map(tokenizer.convert_tokens_to_ids, train_tokens))
-
-    train_token_ids = map(
-        lambda tids: tids + [0] * (max_seq_length - len(tids))
-        if len(tids) <= max_seq_length else tids[:max_seq_length],
-        train_token_ids)
-    train_token_ids = list(train_token_ids)
+    print('Tokenizing {} inputs'.format(len(inputs)))
+    train_token_ids = []
+    for inp in tqdm(inputs):
+        tokens = [CLS] + tokenizer.tokenize(inp) + [SEP]
+        ids = tokenizer.convert_tokens_to_ids(tokens)
+        ids = ids + [0] * (max_seq_length - len(ids)) \
+        if len(ids) <= max_seq_length else ids[:max_seq_length]
+        train_token_ids.append(ids)
     train_token_ids = np.array(train_token_ids)
 
     train_labels_final = np.array(train_labels)
