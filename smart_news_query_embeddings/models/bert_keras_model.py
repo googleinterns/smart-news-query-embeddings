@@ -10,7 +10,8 @@ def embedding_decorator():
 class BertKerasModel(tf.keras.models.Model):
 
     def __init__(self, num_classes=2, bert_dir='uncased_L-12_H-768_A-12',
-        max_seq_length=128, dense_size=256, dropout_rate=0.5, num_dense_layers=2):
+        max_seq_length=128, dense_size=256, dropout_rate=0.5, num_dense_layers=2,
+        use_batch_norm=True):
 
         super(BertKerasModel, self).__init__()
 
@@ -20,6 +21,7 @@ class BertKerasModel(tf.keras.models.Model):
         self.dense_size = dense_size
         self.dropout_rate = dropout_rate
         self.num_dense_layers = num_dense_layers
+        self.use_batch_norm = use_batch_norm # only used in the two-tower model, kept here for consistency.
         self.get_embedding = tf.function(input_signature=[tf.TensorSpec(shape=(None, max_seq_length), dtype=tf.float32)])(self.get_embedding)
 
         self.bert_layer = self._create_bert_layer()

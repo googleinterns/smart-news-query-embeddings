@@ -48,7 +48,8 @@ class TwoTowerModelTrainer(BertModelTrainer):
 
     def get_model(self):
         self.model = TwoTowerModel(self.num_classes, bert_dir=self.bert_dir,
-            max_seq_length=self.max_seq_length, dense_size=self.dense_size, dropout_rate=self.dropout_rate)
+            max_seq_length=self.max_seq_length, dense_size=self.dense_size, dropout_rate=self.dropout_rate,
+            use_batch_norm=self.use_batch_norm)
 
         self.model.build(input_shape=[(None, self.max_seq_length), (None, self.num_classes)])
         self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.learning_rate), metrics=['accuracy'])
