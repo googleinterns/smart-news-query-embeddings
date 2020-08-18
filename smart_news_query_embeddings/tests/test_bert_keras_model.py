@@ -1,5 +1,23 @@
+"""
+Copyright 2020 Google LLC.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import unittest
 import bert
+import tempfile
+import shutil
 import numpy as np
 import tensorflow as tf
 from smart_news_query_embeddings.models.bert_keras_model import BertKerasModel
@@ -12,6 +30,7 @@ class TestBertKerasModel(unittest.TestCase):
 	DENSE_SIZE = 256
 	DROPOUT_RATE = 0.5
 	NUM_DENSE_LAYERS = 2
+	LEARNING_RATE = 1e-5
 
 	def get_model(self):
 		return BertKerasModel(
@@ -80,6 +99,26 @@ class TestBertKerasModel(unittest.TestCase):
 		x = np.zeros((1, self.MAX_SEQ_LENGTH))
 		embedding = model.get_embedding(x).numpy()
 		self.assertEqual(embedding.shape, (1, self.DENSE_SIZE))
+
+	def test_model_save(self):
+
+		"""
+		Test that we can serialize the model and reload it, and still
+		get embeddings from it. This is the primary use case of these
+		trained models for this project.
+		"""
+
+		out_dir = tempfile.mkdtemp()
+		model = self.get_model()
+		model.build(input_shape=(None, self.MAX_SEQ_LENGTH))
+		x = np.zeros((1, self.MAX_SEQ_LENGTH))
+		out = model.predict(x)
+		model.save(out_dir)
+		model = tf.keras.models.load_model(out_dir)
+		embedding = model.get_embedding(x).numpy()
+		self.assertEqual(embedding.shape, (1, self.DENSE_SIZE))
+		shutil.rmtree(out_dir)
+
 
 if __name__ == '__main__':
 	unittest.main()
