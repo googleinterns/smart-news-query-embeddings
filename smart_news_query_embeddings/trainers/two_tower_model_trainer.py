@@ -28,6 +28,15 @@ class TwoTowerModelTrainer(BertModelTrainer):
         self.test_ids = np.load('data/all_test_ids.npy')
         self.test_labels = np.load('data/all_test_labels.npy')
         self.test_outputs = np.load('data/all_test_outputs.npy')
+        if self.dry_run:
+            train_indices = np.random.choice(self.train_ids.shape[0], size=15, replace=False)
+            test_indices = np.random.choice(self.test_ids.shape[0], size=5, replace=False)
+            self.train_ids = self.train_ids[train_indices]
+            self.train_labels = self.train_labels[train_indices]
+            self.train_outputs = self.train_outputs[train_indices]
+            self.test_ids = self.test_ids[test_indices]
+            self.test_labels = self.test_labels[test_indices]
+            self.test_outputs = self.test_outputs[test_indices]
         self.num_classes = self.train_labels.shape[1]
 
     @property
