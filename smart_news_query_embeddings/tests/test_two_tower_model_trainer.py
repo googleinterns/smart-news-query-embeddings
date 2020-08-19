@@ -1,3 +1,19 @@
+"""
+Copyright 2020 Google LLC.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import os
 import shutil
 import uuid
@@ -25,6 +41,11 @@ class TestBertModelTrainer(unittest.TestCase):
         dense_size=self.DENSE_SIZE, bert_dir=self.BERT_DIR, dry_run=True)
 
     def test_init(self):
+
+        """
+        Test that the trainer properly initializes all variables.
+        """
+
         trainer = self.get_model()
         self.assertEqual(trainer.exp_dir, os.path.join('experiments', self.exp_id))
         self.assertEqual(trainer.batch_size, self.BATCH_SIZE)
@@ -39,6 +60,13 @@ class TestBertModelTrainer(unittest.TestCase):
         self.tear_down()
 
     def test_save_after_train(self):
+
+        """
+        Test that the after training, the directory containing
+        all the metrics and data for the experiment has all the
+        subfolders we expect.
+        """
+
         trainer = self.get_model()
         trainer.train()
         exp_dir = os.path.join('experiments', self.exp_id)

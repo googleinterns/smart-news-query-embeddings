@@ -1,3 +1,19 @@
+"""
+Copyright 2020 Google LLC.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import unittest
 import tempfile
 import shutil
@@ -71,6 +87,12 @@ class TestTwoTowerModel(unittest.TestCase):
         self.assertIsInstance(layers[-1], tf.keras.layers.Dense)
 
     def test_model_call(self):
+
+        """
+        Test that the forward pass of the model returns an output
+        with exactly the number of classes we specify.
+        """
+
         model = self.get_model()
         model.build(input_shape=[(None, self.MAX_SEQ_LENGTH), (None, self.NUM_CLASSES)])
         x = np.zeros((1, self.MAX_SEQ_LENGTH))
@@ -96,6 +118,7 @@ class TestTwoTowerModel(unittest.TestCase):
         """
         Make sure that the outputs and embeddings are different before and after training.
         """
+
         model = self.get_model()
         model.build(input_shape=[(None, self.MAX_SEQ_LENGTH), (None, self.NUM_CLASSES)])
         model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.Adam(lr=self.LEARNING_RATE),

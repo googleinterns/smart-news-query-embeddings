@@ -155,6 +155,7 @@ class BertModelTrainer():
 
     Any subclass must also define those 5 attributes in get_data if overridden.
     """
+    
     def get_data(self):
         self.tokenizer = create_tokenizer(self.bert_dir)
 
