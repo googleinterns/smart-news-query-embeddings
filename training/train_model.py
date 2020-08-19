@@ -15,9 +15,10 @@ limitations under the License.
 """
 
 import argparse
-from bert_model_trainer import BertModelTrainer
-from two_tower_model_trainer import TwoTowerModelTrainer
-from bert_model_specificity_score_trainer import BertModelSpecificityScoreTrainer
+import time
+from smart_news_query_embeddings.trainers.bert_model_trainer import BertModelTrainer
+from smart_news_query_embeddings.trainers.two_tower_model_trainer import TwoTowerModelTrainer
+from smart_news_query_embeddings.trainers.bert_model_specificity_score_trainer import BertModelSpecificityScoreTrainer
 
 """
 Script that instantiates a trainer and trains the model.

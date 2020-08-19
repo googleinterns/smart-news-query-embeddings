@@ -14,42 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import csv
 import os
-import random
 import numpy as np
 import pandas as pd
 import bert
 from tqdm import tqdm
 
-from sklearn.model_selection import train_test_split
-
 CATEGORY_THRESHOLD = 20
 RANDOM_SEED = 42
 CLS = '[CLS]'
 SEP = '[SEP]'
-
-def get_filtered_nyt_data(data_path):
-
-    """Reads in the NYT article data.
-
-    Arguments:
-        data_path: Path to the data pickle file.
-
-    Returns:
-        The filtered NYT data with only major categories included.
-    """
-
-    print('Reading data...')
-    df = pd.read_pickle(data_path)
-    sections = df[['section', 'desk']].drop_duplicates() # desk represents a more specific subcategory of the articles
-    category_counts = sections.groupby('section').count().sort_values('desk', ascending=False)
-    big_category_df = category_counts[category_counts['desk'] >= CATEGORY_THRESHOLD]
-
-    big_categories = list(big_category_df.index)
-
-    filtered = df[df['section'].isin(big_categories)]
-    return filtered
 
 def get_filtered_nyt_data_with_scores(data_path):
 
@@ -114,27 +88,3 @@ def tokenize_data(inputs, labels, tokenizer, max_seq_length, num_classes):
     train_labels_final = np.array(train_labels)
 
     return train_token_ids, train_labels_final
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--data-path', '-d', defualt='nyt_data_from_2015.pkl', type=str)
-
-    args = parser.parse_args()
-
-    tokenizer = create_tokenizer('uncased_L-12_H-768_A-12')
-
-    # Read data in from pickled NYT articles and filter by articles with categories that
-    # only have 20 or more subcategories. This narrows down the number of classes in the classification problem
-    # which improves accuracy.
-    df = get_filtered_nyt_data(args.data_path)
-    df['category_labels'] = df['section'].astype('category').cat.codes
-    print(df.head())
-    train_df, test_df = train_test_split(df, random_state=RANDOM_SEED)
-    # 'abstract' column has the abstract of an article (input sentence) and 'category_labels'
-    # has a numeric value for the category ID of that article.
-    train_ids, train_labels = tokenize_data(train_df['abstract'], train_df['category_labels'], tokenizer)
-    test_ids, test_labels = tokenize_data(df['abstract'], train_df['category_labels'], tokenizer)
-    np.save('data/filtered_train_ids.npy', train_ids)
-    np.save('data/filtered_test_ids.npy', test_ids)
-    np.save('data/filtered_train_labels.npy', train_labels)
-    np.save('data/filtered_test_labels.npy', test_labels)
