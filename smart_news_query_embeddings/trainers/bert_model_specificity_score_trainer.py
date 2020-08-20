@@ -1,7 +1,7 @@
 import numpy as np
 from smart_news_query_embeddings.models.two_tower_model import TwoTowerModel
 from tensorflow.keras.optimizers import Adam
-from bert_model_trainer import BertModelTrainer
+from smart_news_query_embeddings.trainers.bert_model_trainer import BertModelTrainer
 
 class BertModelSpecificityScoreTrainer(BertModelTrainer):
 

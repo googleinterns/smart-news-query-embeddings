@@ -1,6 +1,9 @@
-import setuptools
+try:
+    from setuptools import setup, find_packages
+except ImportError:
+    from distutils.core import setup, find_packages
 
-setuptools.setup(
+setup(
     name="smart-news-query-embeddings_vkesav", # Replace with your own username
     version="0.0.1",
     author="Kesav Viswanadha",
@@ -8,7 +11,7 @@ setuptools.setup(
     description="Model training for Smart News Query Embeddings project",
     long_description="",
     url="https://github.com/googleinterns/smart-news-query-embeddings",
-    packages=setuptools.find_packages(),
+    packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",

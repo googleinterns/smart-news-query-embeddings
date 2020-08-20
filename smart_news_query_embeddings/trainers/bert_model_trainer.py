@@ -56,7 +56,8 @@ class BertModelTrainer():
     BATCH_SIZE = 128
 
     def __init__(self, exp_name, max_seq_length=128, bert_dir='uncased_L-12_H-768_A-12',
-        dense_size=256, learning_rate=1e-5, dropout_rate=0.5, epochs=3, batch_size=32):
+        dense_size=256, learning_rate=1e-5, dropout_rate=0.5, epochs=3, batch_size=32,
+        use_batch_norm=True, dry_run=False):
         self.exp_dir = os.path.join('experiments', exp_name)
         self.data_dir = os.path.join(self.exp_dir, 'data')
         self.out_dir = os.path.join(self.exp_dir, 'model')
@@ -68,6 +69,8 @@ class BertModelTrainer():
         self.dropout_rate = dropout_rate
         self.epochs = epochs
         self.batch_size = batch_size
+        self.use_batch_norm = use_batch_norm
+        self.dry_run = dry_run
         if not os.path.exists('experiments'):
             os.mkdir('experiments')
         if not os.path.exists(self.exp_dir):
@@ -153,10 +156,13 @@ class BertModelTrainer():
 
     Any subclass must also define those 5 attributes in get_data if overridden.
     """
+    
     def get_data(self):
         self.tokenizer = create_tokenizer(self.bert_dir)
 
         df = get_filtered_nyt_data_with_scores(self.DATA_PATH)
+        if self.dry_run:
+            df = df.sample(20)
         df['category_labels'] = df[self.OUTPUT_COLUMN].astype('category').cat.codes
         self.num_classes = df['category_labels'].max() + 1
         train_df, test_df = self.get_train_and_valid_split(df)
@@ -184,6 +190,7 @@ class BertModelTrainer():
         self.save_embeddings()
 
     def run_training(self):
+        print(self.model.summary())
         history = self.model.fit(x=self.train_x, y=self.train_y,
             validation_data=(self.valid_x, self.valid_y),
             epochs=self.epochs, batch_size=self.batch_size)

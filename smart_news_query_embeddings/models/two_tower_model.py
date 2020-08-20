@@ -25,11 +25,13 @@ class TwoTowerModel(BertKerasModel):
     def build_model(self):
         self.flatten = Flatten(name="flatten")
         self.dense1_1 = Dense(self.dense_size, name="dense1_1")
-        self.bn1 = BatchNormalization(name="bn1")
+        if self.use_batch_norm:
+            self.bn1 = BatchNormalization(name="bn1")
         self.relu1_1 = LeakyReLU(name="relu1_1")
         self.dropout1 = Dropout(self.dropout_rate)
         self.dense1_2 = Dense(self.dense_size, name="dense1_2")
-        self.bn2 = BatchNormalization(name="bn2")
+        if self.use_batch_norm:
+            self.bn2 = BatchNormalization(name="bn2")
         self.relu1_2 = LeakyReLU(name="relu1_2")
         self.dropout2 = Dropout(self.dropout_rate)
 
@@ -50,6 +52,13 @@ class TwoTowerModel(BertKerasModel):
             self.dropout1,
             self.dense1_2,
             self.bn2
+        ] if self.use_batch_norm else [
+            self.bert_layer,
+            self.flatten,
+            self.dense1_1,
+            self.relu1_1,
+            self.dropout1,
+            self.dense1_2,
         ]
 
     def call(self, inputs):
@@ -57,11 +66,13 @@ class TwoTowerModel(BertKerasModel):
         out1 = self.bert_layer(input_ids)
         out1 = self.flatten(out1)
         out1 = self.dense1_1(out1)
-        out1 = self.bn1(out1)
+        if self.use_batch_norm:
+            out1 = self.bn1(out1)
         out1 = self.relu1_1(out1)
         out1 = self.dropout1(out1)
         out1 = self.dense1_2(out1)
-        out1 = self.bn2(out1)
+        if self.use_batch_norm:
+            out1 = self.bn2(out1)
         out1 = self.relu1_2(out1)
         out1 = self.dropout2(out1)
         out2 = self.dense2_1(input_labels)
