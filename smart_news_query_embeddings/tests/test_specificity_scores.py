@@ -18,7 +18,7 @@ import unittest
 import pandas as pd
 import numpy as np
 from smart_news_query_embeddings.preprocessing.specificity_scores import \
-get_specificity_scores, get_token_scores, get_normalized_scores
+get_scores_from_spacy_responses, get_specificity_scores
 
 class TestSpecificityScores(unittest.TestCase):
 
@@ -38,7 +38,7 @@ class TestSpecificityScores(unittest.TestCase):
 		scores = get_specificity_scores(sentences)
 		self.assertEqual(scores.shape[0], len(sentences))
 
-	def test_get_token_scores(self):
+	def test_get_scores_from_spacy_responses(self):
 
 		"""
 		Tests the mathematical correctness of the token scoring
@@ -60,34 +60,27 @@ class TestSpecificityScores(unittest.TestCase):
 			'token': tokens,
 			'type': types,
 		})
-		scores = get_token_scores(token_df)
-		self.assertEqual(scores.shape[0], len(token_counts))
-		sorted_scores = sorted(list(scores['score']))
-		sorted_token_counts = sorted(token_counts)
-		for score, count in zip(sorted_scores, sorted_token_counts):
-			expected_score = np.log(count / 3)
-			self.assertTrue(np.abs(score - expected_score) < 1e-5)
-
-	def test_get_normalized_scores(self):
-
-		"""
-		Test that the normalized scores for given abstracts are correct.
-		This function should average the token scores for every token found
-		in the abstract and assign that score to the abstract.
-		"""
-
 		token_lists = [
-			[['token1', 'type1'], ['token2', 'type1'], ['token1', 'type2']]
+			[['token1', 'type1']],
+			[['token2', 'type2']],
+			[['token3', 'type1']],
+			[['token4', 'type2']],
+			[['token5', 'type1']],
+			[['token6', 'type2']],
+			[['token1', 'type1'], ['token4', 'type2']]
 		]
+		scores = get_scores_from_spacy_responses(token_lists, token_df)
+		self.assertEqual(scores.shape[0], len(token_lists))
 
-		indexed_token_scores = pd.DataFrame({
-			'token': ['token1', 'token2', 'token1'],
-			'type': ['type1', 'type1', 'type2'],
-			'score': [3, 4, 5]
-		}).set_index(['type', 'token'])
-		scores = get_normalized_scores(token_lists, indexed_token_scores)
-		self.assertEqual(scores.iloc[0], 4)
-		self.assertEqual(scores.shape[0], 1)
+		# The mean token count of each class is 3, because type1 has counts [2, 5, 2]
+		# and type2 has counts [4, 3, 2]
+		# So, we expect the score of each (token, entity) pair to be the log of the
+		# count of that pair divided by 3
+		expected_scores = list(np.log(np.array(token_counts) / 3))
+		# We expect the last token list to average the token scores of token1 and token4
+		expected_scores.append((expected_scores[0] + expected_scores[3]) / 2)
+		for score, expected_score in zip(scores, expected_scores):
+			self.assertTrue(np.abs(score - expected_score) < 1e-5)
 
 if __name__ == '__main__':
 	unittest.main()

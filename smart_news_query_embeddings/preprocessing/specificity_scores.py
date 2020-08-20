@@ -21,7 +21,7 @@ import en_core_web_sm
 from tqdm import tqdm
 nlp = en_core_web_sm.load()
 
-def get_token_list(sentences):
+def get_spacy_responses(sentences):
 
     """
     Tokenizes the given list of sentences
@@ -48,7 +48,7 @@ def get_token_list(sentences):
     })
     return token_df, token_lists
 
-def get_token_scores(token_df):
+def get_scores_from_spacy_responses(token_lists, token_df):
 
     """
     From a DataFrame of tokens and their types, generate the score
@@ -56,11 +56,17 @@ def get_token_scores(token_df):
     counts for its entity type. See design doc for more details.
 
     Arguments:
+        token_lists: A list that contains all the (token, type) pairs for every sentence. e.g.
+        [
+            [['token1', 'type1'], ['token2', 'type1'], ['token1', 'type2']],
+            [['token1', 'type1'], ['token4', 'type2'], ...],
+            ...
+        ]
         token_df: A DataFrame with columns 'token' for the string value of the token
         and 'type' for the entity type of the token.
     Returns:
-        A DataFrame indexed by (token, type) tuples and a 'score' column containing the
-        specifcity score of that (token, type) tuple.
+        A Pandas Series with the score for each article. Should have the same shape on axis 0
+        as the length of token_lists.
     """
 
     token_df['count'] = 1
@@ -70,11 +76,13 @@ def get_token_scores(token_df):
     })
     mean_by_type = average_by_type.rename({'count': 'mean_count'}, axis=1).reset_index()
     token_scores = by_type_and_token.reset_index().merge(mean_by_type, how='outer')
+
+    # computes the log of the ratio between the (T, E) count and the average token count
+    # of every token with that entity type.
     token_scores['score'] = np.log(token_scores['count'] / token_scores['mean_count'])
     indexed_token_scores = token_scores.set_index(['type', 'token'])
-    return indexed_token_scores
 
-def get_normalized_scores(token_lists, indexed_token_scores):
+    # averages the token scores across all the tokens found in each article.
     scores = []
     for token_list in tqdm(token_lists):
         s = 0
@@ -86,6 +94,5 @@ def get_normalized_scores(token_lists, indexed_token_scores):
     return pd.Series(scores)
 
 def get_specificity_scores(sentences):
-    token_df, token_lists = get_token_list(sentences)
-    indexed_token_scores = get_token_scores(token_df)
-    return get_normalized_scores(token_lists, indexed_token_scores)
+    token_df, token_lists = get_spacy_responses(sentences)
+    return get_scores_from_spacy_responses(token_lists, token_df)
