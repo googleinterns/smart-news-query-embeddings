@@ -47,8 +47,8 @@ class TestGenerateNegativeData(unittest.TestCase):
 		self.assertEqual(negatives.shape[0], 2)
 
 		# the negatives should be ('sentence1', 'label2') and ('sentence2', 'label1')
-		self.assertTrue(negatives[negatives['sentence'] == 'sentence1'].iloc[0]['label'] == 'label2')
-		self.assertTrue(negatives[negatives['sentence'] == 'sentence2'].iloc[0]['label'] == 'label1')
+		self.assertEqual(negatives[negatives['sentence'] == 'sentence1'].iloc[0]['label'], 'label2')
+		self.assertEqual(negatives[negatives['sentence'] == 'sentence2'].iloc[0]['label'], 'label1')
 
 if __name__ == '__main__':
 	unittest.main()
