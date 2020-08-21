@@ -29,6 +29,8 @@ def get_spacy_responses(sentences):
     from each sentence. This is a key part of the
     specificity score algorithm.
     """
+    N = len(sentences)
+    print('Running NER on {} sentences'.format(N))
 
     token_lists = []
     tokens = []
