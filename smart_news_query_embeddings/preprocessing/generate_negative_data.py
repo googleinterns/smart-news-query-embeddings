@@ -28,8 +28,14 @@ def generate_negatives_from_spacy_responses(token_lists, sentences, labels, rati
     # that randomly samples entity types.
     keys = list(type_indices.keys())
     probs = np.array([len(type_indices[k]) for k in keys])
-    probs = probs / probs.sum()
+    prob_sum = probs.sum()
+    if prob_sum == 0:
+        return []
+    probs /= prob_sum
 
+    # Generate the negatives by taking pairs of sentences with at least
+    # one token type in common occurring in both,
+    # and having different labels, and swap their labels.
     negatives = []
     num_negs = int(ratio * len(sentences))
     pairs = set()
@@ -40,12 +46,12 @@ def generate_negatives_from_spacy_responses(token_lists, sentences, labels, rati
             if len(type_indices[key]) < 2:
                 continue
             i, j = random.sample(type_indices[key], 2)
+            i, j = sorted([i, j])
             if (i, j) in pairs:
                 continue
             sec1, sec2 = labels.iloc[i], labels.iloc[j]
             sent1, sent2 = sentences.iloc[i], sentences.iloc[j]
             pairs.add((i, j))
-            pairs.add((j, i))
             if sec1 != sec2:
                 negatives.extend([(sent1, sec2), (sent2, sec1)])
                 pbar.update(2)
